@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 
-// 统计数据接口
+// 统计数据接口 - Fixed Prisma syntax errors
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
