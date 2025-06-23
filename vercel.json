@@ -1,22 +1,7 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "SILICONFLOW_API_KEY": "@siliconflow_api_key",
-    "SILICONFLOW_BASE_URL": "@siliconflow_base_url",
-    "SILICONFLOW_TOKENS": "@siliconflow_tokens",
-    "CONSOLE_PASSWORD": "@console_password",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "@nextauth_url"
-  },
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
-  },
-  "regions": ["hkg1", "sin1", "sfo1"]
+  }
 }
