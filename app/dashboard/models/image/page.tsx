@@ -155,7 +155,7 @@ export default function ImageGenerationPage() {
   }
 
   // 使用历史提示词
-  const useHistoryPrompt = (historyPrompt: string) => {
+  const applyHistoryPrompt = (historyPrompt: string) => {
     setPrompt(historyPrompt)
     toast.info('已应用历史提示词')
   }
@@ -424,7 +424,7 @@ export default function ImageGenerationPage() {
                       <div className="relative group">
                         <img
                           src={image.url}
-                          alt={image.prompt}
+                          alt={`Generated image: ${image.prompt}`}
                           className="w-full rounded-lg border aspect-square object-cover transition-all duration-300 hover:scale-[1.02]"
                           loading="lazy"
                         />
@@ -470,7 +470,7 @@ export default function ImageGenerationPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => useHistoryPrompt(image.prompt)}
+                            onClick={() => applyHistoryPrompt(image.prompt)}
                             className="h-6 px-2"
                           >
                             <RefreshCw className="h-3 w-3 mr-1" />
