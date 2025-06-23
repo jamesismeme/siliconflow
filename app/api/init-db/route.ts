@@ -4,7 +4,15 @@ import bcrypt from 'bcryptjs'
 
 export const runtime = 'nodejs'
 
+export async function GET(request: NextRequest) {
+  return await initializeDatabase()
+}
+
 export async function POST(request: NextRequest) {
+  return await initializeDatabase()
+}
+
+async function initializeDatabase() {
   try {
     console.log('开始初始化数据库...')
 
