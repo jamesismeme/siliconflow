@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+export const runtime = 'nodejs'
+
 export function middleware(request: NextRequest) {
   // 检查是否访问 console 路径（除了登录页面）
   if (request.nextUrl.pathname.startsWith('/console') &&
