@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 
+export const runtime = 'nodejs'
+
 // 统计数据接口 - Fixed Prisma syntax errors
 export async function GET(request: NextRequest) {
   try {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 import { tokenManager } from '@/lib/api/tokens'
 
+export const runtime = 'nodejs'
+
 // 获取单个Token详情
 export async function GET(
   request: NextRequest,

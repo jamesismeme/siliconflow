@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ALL_MODELS, getModelsByCategory, getRecommendedModels, MODEL_CATEGORIES } from '@/lib/constants/models'
 
+export const runtime = 'nodejs'
+
 // 获取模型列表
 export async function GET(request: NextRequest) {
   try {

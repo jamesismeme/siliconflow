@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db/prisma'
 
+export const runtime = 'nodejs'
+
 // 登录验证
 export async function POST(request: NextRequest) {
   try {

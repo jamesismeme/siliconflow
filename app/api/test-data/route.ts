@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 
+export const runtime = 'nodejs'
+
 // 创建测试数据
 export async function POST(request: NextRequest) {
   try {

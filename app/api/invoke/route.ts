@@ -3,6 +3,8 @@ import { tokenScheduler } from '@/lib/api/tokens'
 import { getModelByName } from '@/lib/constants/models'
 import { prisma } from '@/lib/db/prisma'
 
+export const runtime = 'nodejs'
+
 // API 请求类型定义
 interface InvokeRequest {
   model: string

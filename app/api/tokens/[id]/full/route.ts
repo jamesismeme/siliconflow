@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
 
+export const runtime = 'nodejs'
+
 // 获取完整Token值（用于复制）
 export async function GET(
   request: NextRequest,

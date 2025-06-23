@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db/prisma'
+
+export const runtime = 'nodejs'
 import { tokenManager } from '@/lib/api/tokens'
 
 // 获取Token列表和统计信息
