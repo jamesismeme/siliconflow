@@ -285,7 +285,7 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1`
     
     // 获取Token统计
-    const tokenStats = await tokenScheduler.tokenManager.getTokenStats()
+    const tokenStats = await tokenScheduler.getTokenStats()
     
     return NextResponse.json({
       status: 'healthy',

@@ -194,6 +194,11 @@ export class TokenScheduler {
 
     try {
       token = await this.selectBestToken()
+
+      if (!token) {
+        throw new Error('No available tokens found')
+      }
+
       const client = createSiliconFlowClient(token.value)
 
       console.log(`[TokenScheduler] Using token ${token.id} (${token.name}) for ${modelName}`)
@@ -216,6 +221,17 @@ export class TokenScheduler {
       console.error(`[TokenScheduler] API call failed:`, error)
       throw error
     }
+  }
+
+  // 获取Token统计（公共方法）
+  async getTokenStats(): Promise<{
+    total: number
+    active: number
+    totalUsageToday: number
+    totalLimitToday: number
+    avgUsageRate: number
+  }> {
+    return await this.tokenManager.getTokenStats()
   }
 }
 
