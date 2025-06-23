@@ -1,5 +1,7 @@
 # SiliconFlow Platform
 
+<!-- Trigger Vercel redeploy -->
+
 基于 Next.js 14 和 SiliconFlow API 构建的在线大模型调用工具平台。
 
 ## 🚀 功能特性
