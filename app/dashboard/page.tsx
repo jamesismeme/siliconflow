@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const { data: stats, loading, error, refetch } = useStats('today')
 
   // 计算统计数据
-  const successRate = stats?.overview.totalCalls > 0
+  const successRate = stats?.overview?.totalCalls && stats.overview.totalCalls > 0
     ? Math.round(stats.overview.successRate * 100) / 100
     : 100
 
@@ -104,7 +104,7 @@ export default function DashboardPage() {
                 </div>
                 <p className="text-xs text-gray-400 flex items-center gap-1">
                   <TrendingUp className="h-3 w-3" />
-                  {stats?.overview.totalCalls > 0 ? '系统活跃' : '暂无调用'}
+                  {stats?.overview?.totalCalls && stats.overview.totalCalls > 0 ? '系统活跃' : '暂无调用'}
                 </p>
               </CardContent>
             </Card>

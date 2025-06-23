@@ -31,7 +31,7 @@ import { toast } from 'sonner'
 interface TextProcessingResult {
   id: string
   type: 'embedding' | 'rerank'
-  input: string | string[]
+  input: string | string[] | { query: string; documents: string[] }
   output: any
   parameters: any
   timestamp: string
@@ -48,7 +48,7 @@ export default function TextProcessingPage() {
   const [showParameters, setShowParameters] = useState(false)
   const [processingTask, setProcessingTask] = useState<{
     type: 'embedding' | 'rerank'
-    input: string | string[]
+    input: string | string[] | { query: string; documents: string[] }
     isBatch?: boolean
   } | null>(null)
   
@@ -604,7 +604,7 @@ export default function TextProcessingPage() {
                                   )}
                                 </div>
                               ) : (
-                                <p>{result.input}</p>
+                                <p>{typeof result.input === 'string' ? result.input : JSON.stringify(result.input)}</p>
                               )
                             ) : (
                               <div>

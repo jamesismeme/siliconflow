@@ -37,6 +37,10 @@ interface ModelParameters {
   voice?: string
   speed?: number
   language?: string
+  // 文本处理参数
+  encoding_format?: string
+  top_n?: number
+  return_documents?: boolean
 }
 
 // API调用结果接口

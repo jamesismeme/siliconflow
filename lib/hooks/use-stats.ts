@@ -247,7 +247,7 @@ export function useLogs(filters: {
   limit?: number
   success?: boolean | null
   modelName?: string
-  tokenId?: number
+  tokenId?: number | null
   startDate?: string
   endDate?: string
   search?: string

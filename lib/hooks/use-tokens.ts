@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 export interface Token {
   id: number
   name: string
-  key: string
+  value: string
   isActive: boolean
   usageToday: number
   limitPerDay: number

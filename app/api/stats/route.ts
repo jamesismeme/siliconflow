@@ -82,10 +82,18 @@ export async function GET(request: NextRequest) {
           gte: startDate,
           lte: endDate
         },
-        modelName: {
-          not: null,
-          not: ''
-        }
+        AND: [
+          {
+            modelName: {
+              not: null
+            }
+          },
+          {
+            modelName: {
+              not: ''
+            }
+          }
+        ]
       },
       _count: {
         id: true
@@ -200,9 +208,9 @@ export async function GET(request: NextRequest) {
       })),
       models: modelStats.map(model => ({
         name: model.modelName,
-        calls: model._count.id,
-        avgResponseTime: Math.round((model._avg.responseTime || 0) * 100) / 100,
-        percentage: Math.round((model._count.id / totalCalls) * 100 * 100) / 100
+        calls: model._count?.id || 0,
+        avgResponseTime: Math.round((model._avg?.responseTime || 0) * 100) / 100,
+        percentage: Math.round(((model._count?.id || 0) / totalCalls) * 100 * 100) / 100
       })).sort((a, b) => b.calls - a.calls),
       trends: {
         hourly: hourlyData
