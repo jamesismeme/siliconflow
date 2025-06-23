@@ -82,12 +82,7 @@ export async function GET(request: NextRequest) {
           gte: startDate,
           lte: endDate
         },
-        modelName: {
-          not: null
-        },
-        NOT: {
-          modelName: ''
-        }
+
       },
       _count: {
         id: true
@@ -101,8 +96,8 @@ export async function GET(request: NextRequest) {
     const responseTimeStats = await prisma.callLog.aggregate({
       where: {
         success: true,
-        responseTime: {
-          not: null
+        NOT: {
+          responseTime: null
         },
         createdAt: {
           gte: startDate,
@@ -124,8 +119,8 @@ export async function GET(request: NextRequest) {
     const tokenUsage = await prisma.callLog.groupBy({
       by: ['tokenId'],
       where: {
-        tokenId: {
-          not: null
+        NOT: {
+          tokenId: null
         },
         createdAt: {
           gte: startDate,
@@ -195,16 +190,16 @@ export async function GET(request: NextRequest) {
         usageToday: token.usageToday,
         limitPerDay: token.limitPerDay,
         usageRate: Math.round((token.usageToday / token.limitPerDay) * 100),
-        callsInPeriod: token._count.callLogs,
+        callsInPeriod: (typeof token._count === 'object' ? token._count.callLogs : 0) || 0,
         lastUsedAt: token.lastUsedAt,
         status: token.usageToday >= token.limitPerDay ? 'exhausted' : 
                 token.usageToday > token.limitPerDay * 0.8 ? 'warning' : 'healthy'
       })),
       models: modelStats.map(model => ({
         name: model.modelName,
-        calls: model._count?.id || 0,
+        calls: (typeof model._count === 'object' ? model._count.id : 0) || 0,
         avgResponseTime: Math.round((model._avg?.responseTime || 0) * 100) / 100,
-        percentage: Math.round(((model._count?.id || 0) / totalCalls) * 100 * 100) / 100
+        percentage: Math.round((((typeof model._count === 'object' ? model._count.id : 0) || 0) / totalCalls) * 100 * 100) / 100
       })).sort((a, b) => b.calls - a.calls),
       trends: {
         hourly: hourlyData
