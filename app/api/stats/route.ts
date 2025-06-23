@@ -82,18 +82,12 @@ export async function GET(request: NextRequest) {
           gte: startDate,
           lte: endDate
         },
-        AND: [
-          {
-            modelName: {
-              not: null
-            }
-          },
-          {
-            modelName: {
-              not: ''
-            }
-          }
-        ]
+        modelName: {
+          not: null
+        },
+        NOT: {
+          modelName: ''
+        }
       },
       _count: {
         id: true
