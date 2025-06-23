@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { config } from 'dotenv'
+import bcrypt from 'bcryptjs'
 
 // 加载环境变量
 config()
@@ -15,6 +16,7 @@ async function main() {
   await prisma.userSetting.deleteMany()
   await prisma.systemStats.deleteMany()
   await prisma.modelStats.deleteMany()
+  await prisma.adminUser.deleteMany()
 
   // 从环境变量读取API Token
   const tokensFromEnv = process.env.SILICONFLOW_TOKENS?.split(',') || []
@@ -37,6 +39,20 @@ async function main() {
   })
 
   console.log(`创建了 ${tokens.count} 个Token`)
+
+  // 创建管理员账户
+  const adminPassword = 'a95xg4exa7efq'
+  const hashedPassword = await bcrypt.hash(adminPassword, 10)
+
+  await prisma.adminUser.create({
+    data: {
+      username: 'weier',
+      passwordHash: hashedPassword,
+      isActive: true,
+    },
+  })
+
+  console.log('创建了管理员账户: weier')
 
   // 创建示例用户设置
   await prisma.userSetting.create({
