@@ -28,7 +28,10 @@ import {
 } from 'lucide-react'
 import { useAudioApi } from '@/lib/hooks/use-api'
 import { useModelStore } from '@/lib/stores/model-store'
+import { useTokenStore } from '@/lib/stores/token-store'
 import { toast } from 'sonner'
+import Link from 'next/link'
+import { AlertTriangle, CheckCircle } from 'lucide-react'
 
 // 音频处理历史记录
 interface AudioRecord {
@@ -60,6 +63,13 @@ export default function AudioProcessingPage() {
     selectDefaultModel,
     forceSelectDefaultModel
   } = useModelStore()
+
+  // Token 状态检查
+  const tokens = useTokenStore(state => state.tokens)
+  const hasTokens = tokens.length > 0
+  const hasAvailableTokens = tokens.some(token =>
+    token.isActive && token.usageToday < token.limitPerDay
+  )
 
   // 确保使用正确的语音模型
   useEffect(() => {
@@ -141,6 +151,17 @@ export default function AudioProcessingPage() {
   // 语音转文字
   const handleTranscription = async () => {
     if (!audioFile || !selectedModel || loading) return
+
+    // 检查 Token 可用性
+    if (!hasTokens) {
+      toast.error('请先添加 API Token')
+      return
+    }
+
+    if (!hasAvailableTokens) {
+      toast.error('所有 Token 已达到每日限制，请添加新的 Token 或等待重置')
+      return
+    }
 
     const currentFile = audioFile
     setProcessingFile(currentFile)

@@ -1,205 +1,100 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { useTokenStore, useTokenActions } from '@/lib/stores/token-store'
+import type { Token, TokenStats, TokenInput } from '@/lib/storage/types'
 
-export interface Token {
-  id: number
-  name: string
-  value: string
-  isActive: boolean
-  usageToday: number
-  limitPerDay: number
-  lastUsedAt: string | null
-  createdAt: string
-  updatedAt: string
-  _count?: {
-    callLogs: number
-  }
-}
+// 重新导出类型以保持兼容性
+export type { Token, TokenStats, TokenInput }
 
-export interface TokenStats {
-  totalTokens: number
-  activeTokens: number
-  totalUsageToday: number
-  totalLimitPerDay: number
-  averageUsageRate: number
-  lastActivity: {
-    time: string | null
-    tokenName: string | null
-  }
-}
-
-// Token管理Hook
+// Token管理Hook - 使用新的 LocalStorage 系统
 export function useTokens() {
-  const [tokens, setTokens] = useState<Token[]>([])
-  const [stats, setStats] = useState<TokenStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const tokens = useTokenStore(state => state.tokens)
+  const stats = useTokenStore(state => state.stats)
+  const loading = useTokenStore(state => state.loading)
+  const error = useTokenStore(state => state.error)
+  const { loadTokens } = useTokenActions()
 
-  const fetchTokens = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const response = await fetch('/api/tokens')
-      const result = await response.json()
-
-      if (result.success) {
-        setTokens(result.data.tokens)
-        setStats(result.data.stats)
-      } else {
-        setError(result.error || 'Failed to fetch tokens')
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchTokens()
-  }, [fetchTokens])
-
-  // 创建Token
-  const createToken = useCallback(async (data: {
-    name: string
-    key: string
-    limitPerDay: number
-  }) => {
-    try {
-      const response = await fetch('/api/tokens', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: data.name,
-          value: data.key, // API使用value字段
-          limitPerDay: data.limitPerDay
-        })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        await fetchTokens() // 重新获取数据
-        return { success: true, data: result.data }
-      } else {
-        return { success: false, error: result.error }
-      }
-    } catch (err) {
-      return { 
-        success: false, 
-        error: err instanceof Error ? err.message : 'Unknown error' 
-      }
-    }
-  }, [fetchTokens])
-
-  // 更新Token
-  const updateToken = useCallback(async (id: number, data: {
-    name?: string
-    limitPerDay?: number
-    isActive?: boolean
-    value?: string
-  }) => {
-    try {
-      const response = await fetch(`/api/tokens/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        await fetchTokens() // 重新获取数据
-        return { success: true, data: result.data }
-      } else {
-        return { success: false, error: result.error }
-      }
-    } catch (err) {
-      return { 
-        success: false, 
-        error: err instanceof Error ? err.message : 'Unknown error' 
-      }
-    }
-  }, [fetchTokens])
-
-  // 删除Token
-  const deleteToken = useCallback(async (id: number) => {
-    try {
-      const response = await fetch(`/api/tokens/${id}`, {
-        method: 'DELETE'
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        await fetchTokens() // 重新获取数据
-        return { success: true }
-      } else {
-        return { success: false, error: result.error }
-      }
-    } catch (err) {
-      return { 
-        success: false, 
-        error: err instanceof Error ? err.message : 'Unknown error' 
-      }
-    }
-  }, [fetchTokens])
-
-  // 重置Token使用量
-  const resetTokenUsage = useCallback(async (id: number) => {
-    try {
-      const response = await fetch(`/api/tokens/${id}/reset`, {
-        method: 'POST'
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        await fetchTokens() // 重新获取数据
-        return { success: true }
-      } else {
-        return { success: false, error: result.error }
-      }
-    } catch (err) {
-      return { 
-        success: false, 
-        error: err instanceof Error ? err.message : 'Unknown error' 
-      }
-    }
-  }, [fetchTokens])
-
-  // 测试Token
-  const testToken = useCallback(async (id: number) => {
-    try {
-      const response = await fetch(`/api/tokens/${id}/test`, {
-        method: 'POST'
-      })
-
-      const result = await response.json()
-
-      return result
-    } catch (err) {
-      return { 
-        success: false, 
-        error: err instanceof Error ? err.message : 'Unknown error' 
-      }
-    }
-  }, [])
+  const refetch = useCallback(() => {
+    loadTokens()
+  }, [loadTokens])
 
   return {
     tokens,
     stats,
     loading,
     error,
-    refetch: fetchTokens,
-    createToken,
+    refetch
+  }
+}
+
+// 综合Token操作Hook（保持向后兼容）
+export function useTokenOperations() {
+  const {
+    addToken,
     updateToken,
+    removeToken,
+    toggleTokenStatus,
+    selectBestToken,
+    recordTokenUsage,
+    resetDailyUsage,
+    validateToken,
+    getTokenDisplayValue,
+    isTokenNearLimit
+  } = useTokenActions()
+
+  const createToken = useCallback(async (data: {
+    name: string
+    key: string
+    limitPerDay: number
+  }) => {
+    const tokenInput: TokenInput = {
+      name: data.name,
+      value: data.key,
+      limitPerDay: data.limitPerDay,
+      isActive: true
+    }
+
+    return await addToken(tokenInput)
+  }, [addToken])
+
+  const updateTokenData = useCallback(async (id: string, data: {
+    name?: string
+    isActive?: boolean
+    limitPerDay?: number
+    value?: string
+  }) => {
+    return await updateToken(id, data)
+  }, [updateToken])
+
+  const deleteToken = useCallback(async (id: string) => {
+    return await removeToken(id)
+  }, [removeToken])
+
+  const resetTokenUsage = useCallback((id: string) => {
+    // 重置单个 Token 的使用量
+    updateToken(id, { usageToday: 0 })
+  }, [updateToken])
+
+  const testToken = useCallback(async (value: string) => {
+    // 验证 Token 格式
+    const validation = validateToken(value)
+    return {
+      success: validation.isValid,
+      error: validation.error
+    }
+  }, [validateToken])
+
+  return {
+    createToken,
+    updateToken: updateTokenData,
     deleteToken,
     resetTokenUsage,
-    testToken
+    testToken,
+    toggleTokenStatus,
+    selectBestToken,
+    recordTokenUsage,
+    resetDailyUsage,
+    validateToken,
+    getTokenDisplayValue,
+    isTokenNearLimit
   }
 }

@@ -19,14 +19,13 @@ import {
   Server,
   Database
 } from 'lucide-react'
-import { useStats } from '@/lib/hooks/use-stats'
-import { TrendChart } from '@/components/stats/trend-chart'
-import { CustomPieChart } from '@/components/stats/pie-chart'
-import { CustomBarChart } from '@/components/stats/bar-chart'
+import { useClientStats } from '@/lib/hooks/use-client-stats'
+import { useTokenStore } from '@/lib/stores/token-store'
 
 export default function StatsPage() {
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today')
-  const { data: stats, loading, error, refetch } = useStats(period)
+  const { data: stats, loading, error, refetch } = useClientStats(period)
+  const tokenStats = useTokenStore(state => state.stats)
 
   if (loading) {
     return (
@@ -78,7 +77,7 @@ export default function StatsPage() {
   if (!stats) return null
 
   const successRate = stats.overview.totalCalls > 0
-    ? Math.round(stats.overview.successRate * 100) / 100
+    ? Math.round(stats.overview.successRate)
     : 0
 
   return (
@@ -104,7 +103,7 @@ export default function StatsPage() {
               </span>
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl">
-              查看系统使用统计、性能指标和趋势分析，全面掌握平台运行状况
+              查看本地使用统计和性能指标，基于浏览器存储的数据分析
             </p>
           </div>
         <div className="flex items-center space-x-2">
@@ -144,7 +143,7 @@ export default function StatsPage() {
           <CardContent>
             <div className="text-2xl font-bold text-white">{successRate}%</div>
             <p className="text-xs text-gray-400">
-              {stats.overview.successfulCalls}/{stats.overview.totalCalls} 成功
+              {stats.overview.totalCalls - stats.overview.totalErrors}/{stats.overview.totalCalls} 成功
             </p>
           </CardContent>
         </Card>
@@ -156,10 +155,10 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {(stats.overview.avgResponseTime / 1000).toFixed(2)}s
+              {(stats.overview.averageResponseTime / 1000).toFixed(2)}s
             </div>
             <p className="text-xs text-gray-400">
-              最快 {(stats.overview.minResponseTime / 1000).toFixed(2)}s | 最慢 {(stats.overview.maxResponseTime / 1000).toFixed(2)}s
+              平均响应时间
             </p>
           </CardContent>
         </Card>
@@ -170,9 +169,9 @@ export default function StatsPage() {
             <Users className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats.models.length}</div>
+            <div className="text-2xl font-bold text-white">{Object.keys(stats.models).length}</div>
             <p className="text-xs text-gray-400">
-              共18个可用模型
+              已使用的模型数量
             </p>
           </CardContent>
         </Card>
@@ -193,30 +192,41 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.tokens.map((token) => (
-                <div key={token.id} className="flex items-center justify-between p-3 border border-gray-700 bg-gray-800/30 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      token.status === 'healthy' ? 'bg-green-500' :
-                      token.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
-                    }`} />
-                    <div>
-                      <h4 className="font-medium text-white">{token.name}</h4>
-                      <p className="text-sm text-gray-400">
-                        今日 {token.callsInPeriod} 次调用
-                      </p>
+              {tokenStats ? (
+                <div className="grid gap-4">
+                  <div className="flex items-center justify-between p-3 border border-gray-700 bg-gray-800/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <div>
+                        <h4 className="font-medium text-white">Token 总览</h4>
+                        <p className="text-sm text-gray-400">
+                          今日总调用: {tokenStats.totalUsageToday} 次
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-white">
+                        {tokenStats.activeTokens}/{tokenStats.totalTokens}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        活跃/总数
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-white">
-                      {token.usageToday}/{token.limitPerDay}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      RPM限制: {token.limitPerDay}/分钟
-                    </div>
+                  <div className="text-sm text-gray-400">
+                    平均使用率: {tokenStats.averageUsageRate.toFixed(1)}%
                   </div>
+                  {tokenStats.lastActivity.time && (
+                    <div className="text-sm text-gray-400">
+                      最近活动: {new Date(tokenStats.lastActivity.time).toLocaleString()}
+                    </div>
+                  )}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-4 text-gray-400">
+                  暂无 Token 数据
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -234,23 +244,23 @@ export default function StatsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.models.slice(0, 5).map((model, index) => (
-                <div key={model.name} className="flex items-center justify-between">
+              {Object.entries(stats.models).slice(0, 5).map(([modelName, modelData], index) => (
+                <div key={modelName} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-6 h-6 bg-blue-500/20 rounded-full text-xs font-semibold text-blue-400">
                       {index + 1}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-medium truncate text-white">{model.name}</h4>
+                      <h4 className="font-medium truncate text-white">{modelName}</h4>
                       <p className="text-sm text-gray-400">
-                        平均响应: {(model.avgResponseTime / 1000).toFixed(2)}s
+                        平均响应: {(modelData.averageResponseTime / 1000).toFixed(2)}s
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium text-white">{model.calls} 次</div>
+                    <div className="text-sm font-medium text-white">{modelData.calls} 次</div>
                     <div className="text-xs text-gray-400">
-                      {model.percentage}%
+                      {stats.overview.totalCalls > 0 ? ((modelData.calls / stats.overview.totalCalls) * 100).toFixed(1) : 0}%
                     </div>
                   </div>
                 </div>
@@ -260,50 +270,77 @@ export default function StatsPage() {
         </Card>
       </div>
 
-      {/* 24小时调用趋势和模型分布 */}
+      {/* 调用类别统计 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* 24小时调用趋势图表 */}
-        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <TrendingUp className="h-5 w-5 text-yellow-400" />
-              24小时调用趋势
-            </CardTitle>
-            <CardDescription className="text-gray-400">
-              最近24小时的API调用量和成功率变化
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TrendChart
-              data={stats.trends.hourly}
-              type="area"
-              height={300}
-              showResponseTime={false}
-            />
-          </CardContent>
-        </Card>
-
-        {/* 模型调用分布饼图 */}
+        {/* 调用类别分布 */}
         <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
               <BarChart3 className="h-5 w-5 text-purple-400" />
-              模型调用分布
+              调用类别分布
             </CardTitle>
             <CardDescription className="text-gray-400">
-              {period === 'today' ? '今日' : period === 'week' ? '本周' : '本月'}各模型调用占比
+              {period === 'today' ? '今日' : period === 'week' ? '本周' : '本月'}各类别调用情况
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CustomPieChart
-              data={stats.models.slice(0, 6).map(model => ({
-                name: model.name.split('/').pop() || model.name,
-                value: model.calls
-              }))}
-              height={300}
-              showLegend={true}
-              innerRadius={40}
-            />
+            <div className="space-y-4">
+              {Object.entries(stats.categories).map(([category, categoryData]) => (
+                <div key={category} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                    <div>
+                      <h4 className="font-medium text-white capitalize">{category}</h4>
+                      <p className="text-sm text-gray-400">
+                        平均响应: {(categoryData.averageResponseTime / 1000).toFixed(2)}s
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">{categoryData.calls} 次</div>
+                    <div className="text-xs text-gray-400">
+                      错误: {categoryData.errors}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 时间线统计 */}
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <TrendingUp className="h-5 w-5 text-yellow-400" />
+              时间线统计
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              按日期统计的调用情况
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {stats.timeline.slice(-7).map((timeData) => (
+                <div key={timeData.date} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <div>
+                      <h4 className="font-medium text-white">{timeData.date}</h4>
+                      <p className="text-sm text-gray-400">
+                        平均响应: {(timeData.averageResponseTime / 1000).toFixed(2)}s
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">{timeData.calls} 次</div>
+                    <div className="text-xs text-gray-400">
+                      错误: {timeData.errors}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -323,15 +360,15 @@ export default function StatsPage() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-300">API响应时间</span>
-              <Badge className={`${stats.overview.avgResponseTime < 3000 ? "bg-green-600 hover:bg-green-700" : "bg-gray-600 hover:bg-gray-700"} text-white`}>
-                {stats.overview.avgResponseTime < 1000 ? "优秀" :
-                 stats.overview.avgResponseTime < 3000 ? "良好" : "需优化"}
+              <Badge className={`${stats.overview.averageResponseTime < 3000 ? "bg-green-600 hover:bg-green-700" : "bg-gray-600 hover:bg-gray-700"} text-white`}>
+                {stats.overview.averageResponseTime < 1000 ? "优秀" :
+                 stats.overview.averageResponseTime < 3000 ? "良好" : "需优化"}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-300">Token健康状态</span>
-              <Badge className={`${stats.tokens.filter(t => t.status === 'healthy').length > 0 ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"} text-white`}>
-                {stats.tokens.filter(t => t.status === 'healthy').length}/{stats.tokens.length} 健康
+              <span className="text-sm text-gray-300">Token状态</span>
+              <Badge className={`${tokenStats && tokenStats.activeTokens > 0 ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"} text-white`}>
+                {tokenStats ? `${tokenStats.activeTokens}/${tokenStats.totalTokens} 活跃` : '无Token'}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
@@ -341,9 +378,9 @@ export default function StatsPage() {
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-300">活跃模型</span>
+              <span className="text-sm text-gray-300">使用模型</span>
               <Badge className="bg-gray-600 hover:bg-gray-700 text-white border-gray-600">
-                {stats.models.length} 个模型
+                {Object.keys(stats.models).length} 个模型
               </Badge>
             </div>
           </CardContent>
@@ -367,7 +404,7 @@ export default function StatsPage() {
                   <CheckCircle className="h-3 w-3" />
                   系统运行良好
                 </p>
-                <p className="text-gray-400">所有模型响应正常，成功率优秀</p>
+                <p className="text-gray-400">API调用成功率优秀，系统稳定</p>
               </div>
             ) : (
               <div className="text-sm">
@@ -375,45 +412,45 @@ export default function StatsPage() {
                   <AlertTriangle className="h-3 w-3" />
                   成功率需关注
                 </p>
-                <p className="text-gray-400">当前成功率 {successRate}%，建议检查失败原因</p>
+                <p className="text-gray-400">当前成功率 {successRate}%，建议检查Token或网络状况</p>
               </div>
             )}
 
             {/* Token使用建议 */}
-            {stats.tokens.some(t => t.status === 'exhausted') ? (
-              <div className="text-sm">
-                <p className="font-medium text-red-400 flex items-center gap-1">
-                  <XCircle className="h-3 w-3" />
-                  Token额度不足
-                </p>
-                <p className="text-gray-400">部分Token已达到限额，建议增加Token或重置额度</p>
-              </div>
-            ) : stats.tokens.some(t => t.status === 'warning') ? (
+            {tokenStats && tokenStats.averageUsageRate > 80 ? (
               <div className="text-sm">
                 <p className="font-medium text-yellow-400 flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
                   Token使用率较高
                 </p>
-                <p className="text-gray-400">部分Token使用率超过80%，建议监控使用情况</p>
+                <p className="text-gray-400">平均使用率 {tokenStats.averageUsageRate.toFixed(1)}%，建议添加更多Token</p>
               </div>
-            ) : (
+            ) : tokenStats && tokenStats.totalTokens > 0 ? (
               <div className="text-sm">
                 <p className="font-medium text-blue-400 flex items-center gap-1">
                   <Server className="h-3 w-3" />
                   Token状态良好
                 </p>
-                <p className="text-gray-400">所有Token运行正常，负载均衡有效</p>
+                <p className="text-gray-400">Token使用率正常，负载均衡有效</p>
+              </div>
+            ) : (
+              <div className="text-sm">
+                <p className="font-medium text-red-400 flex items-center gap-1">
+                  <XCircle className="h-3 w-3" />
+                  缺少Token
+                </p>
+                <p className="text-gray-400">请添加API Token以开始使用服务</p>
               </div>
             )}
 
             {/* 响应时间建议 */}
-            {stats.overview.avgResponseTime > 5000 && (
+            {stats.overview.averageResponseTime > 5000 && (
               <div className="text-sm">
                 <p className="font-medium text-orange-400 flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   响应时间较慢
                 </p>
-                <p className="text-gray-400">平均响应时间超过5秒，建议优化网络或检查模型状态</p>
+                <p className="text-gray-400">平均响应时间超过5秒，建议检查网络连接</p>
               </div>
             )}
           </CardContent>

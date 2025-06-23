@@ -25,6 +25,8 @@ import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useModelStore } from '@/lib/stores/model-store'
+import { useTokenStore } from '@/lib/stores/token-store'
+import Link from 'next/link'
 
 // 消息接口
 interface Message {
@@ -51,6 +53,13 @@ export default function ChatPage() {
     setParameters,
     forceSelectDefaultModel
   } = useModelStore()
+
+  // Token 状态检查
+  const tokens = useTokenStore(state => state.tokens)
+  const hasTokens = tokens.length > 0
+  const hasAvailableTokens = tokens.some(token =>
+    token.isActive && token.usageToday < token.limitPerDay
+  )
 
   // 确保使用正确的对话模型
   useEffect(() => {
@@ -79,6 +88,17 @@ export default function ChatPage() {
   // 发送消息
   const sendMessage = async () => {
     if (!input.trim() || !selectedModel || loading) return
+
+    // 检查 Token 可用性
+    if (!hasTokens) {
+      toast.error('请先添加 API Token')
+      return
+    }
+
+    if (!hasAvailableTokens) {
+      toast.error('所有 Token 已达到每日限制，请添加新的 Token 或等待重置')
+      return
+    }
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -342,6 +362,57 @@ export default function ChatPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Token 状态提示 */}
+            {!hasTokens && (
+              <Card className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border-yellow-500/30 backdrop-blur-sm">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-full bg-yellow-500/20">
+                        <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-yellow-300">需要配置 API Token</h3>
+                        <p className="text-sm text-yellow-200/80">
+                          请先添加您的 SiliconFlow API Token 以开始对话
+                        </p>
+                      </div>
+                    </div>
+                    <Link href="/console/tokens">
+                      <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                        配置 Token
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {!hasAvailableTokens && hasTokens && (
+              <Card className="bg-gradient-to-r from-red-900/20 to-pink-900/20 border-red-500/30 backdrop-blur-sm">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-full bg-red-500/20">
+                        <AlertTriangle className="h-5 w-5 text-red-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-red-300">Token 额度不足</h3>
+                        <p className="text-sm text-red-200/80">
+                          所有 Token 已达到每日限制，请添加新的 Token 或等待重置
+                        </p>
+                      </div>
+                    </div>
+                    <Link href="/console/tokens">
+                      <Button className="bg-red-600 hover:bg-red-700 text-white">
+                        管理 Token
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 聊天消息区域 */}
             <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm flex-1 flex flex-col min-h-0">

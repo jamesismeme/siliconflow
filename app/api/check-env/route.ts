@@ -5,9 +5,8 @@ export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const envVars = {
-      DATABASE_URL: process.env.DATABASE_URL ? '✅ 已设置' : '❌ 未设置',
       SILICONFLOW_BASE_URL: process.env.SILICONFLOW_BASE_URL ? '✅ 已设置' : '❌ 未设置',
-      SILICONFLOW_TOKENS: process.env.SILICONFLOW_TOKENS ? '✅ 已设置' : '❌ 未设置',
+      NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME ? '✅ 已设置' : '❌ 未设置',
     }
 
     const allSet = Object.values(envVars).every(status => status.includes('✅'))
@@ -16,9 +15,7 @@ export async function GET(request: NextRequest) {
       success: allSet,
       message: allSet ? '所有环境变量已正确配置' : '部分环境变量缺失',
       envVars,
-      databaseUrlPreview: process.env.DATABASE_URL ? 
-        `${process.env.DATABASE_URL.substring(0, 20)}...` : 
-        '未设置'
+      note: '现在使用 LocalStorage 存储，无需数据库配置'
     })
 
   } catch (error) {

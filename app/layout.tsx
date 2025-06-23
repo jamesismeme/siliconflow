@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils/cn'
@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   description: '在线大模型调用工具平台',
   keywords: ['AI', '大模型', 'SiliconFlow', '在线工具'],
   authors: [{ name: 'SiliconFlow Platform Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: '#667eea',
 }
 
@@ -24,7 +28,6 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning className="dark">
       <head>
         <link rel="icon" href="/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={cn(inter.className, "min-h-screen bg-black text-white antialiased")}>
         <div className="relative flex min-h-screen flex-col bg-black">

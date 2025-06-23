@@ -25,7 +25,10 @@ import {
 } from 'lucide-react'
 import { useEmbeddingApi, useRerankApi } from '@/lib/hooks/use-api'
 import { useModelStore } from '@/lib/stores/model-store'
+import { useTokenStore } from '@/lib/stores/token-store'
 import { toast } from 'sonner'
+import Link from 'next/link'
+import { AlertTriangle, CheckCircle } from 'lucide-react'
 
 // 文本处理结果
 interface TextProcessingResult {
@@ -64,6 +67,13 @@ export default function TextProcessingPage() {
     forceSelectDefaultModel
   } = useModelStore()
 
+  // Token 状态检查
+  const tokens = useTokenStore(state => state.tokens)
+  const hasTokens = tokens.length > 0
+  const hasAvailableTokens = tokens.some(token =>
+    token.isActive && token.usageToday < token.limitPerDay
+  )
+
   // 确保使用正确的文本处理模型
   useEffect(() => {
     const category = activeTab === 'embedding' ? 'embedding' : 'rerank'
@@ -86,6 +96,17 @@ export default function TextProcessingPage() {
   // 处理文本嵌入
   const handleEmbedding = async (isBatch = false) => {
     if (!selectedModel || loading) return
+
+    // 检查 Token 可用性
+    if (!hasTokens) {
+      toast.error('请先添加 API Token')
+      return
+    }
+
+    if (!hasAvailableTokens) {
+      toast.error('所有 Token 已达到每日限制，请添加新的 Token 或等待重置')
+      return
+    }
 
     const input = isBatch
       ? batchTexts.split('\n').filter(text => text.trim())
@@ -138,6 +159,17 @@ export default function TextProcessingPage() {
   // 处理重排序
   const handleRerank = async () => {
     if (!query.trim() || !documents.trim() || !selectedModel || loading) return
+
+    // 检查 Token 可用性
+    if (!hasTokens) {
+      toast.error('请先添加 API Token')
+      return
+    }
+
+    if (!hasAvailableTokens) {
+      toast.error('所有 Token 已达到每日限制，请添加新的 Token 或等待重置')
+      return
+    }
 
     const docList = documents.split('\n').filter(doc => doc.trim())
     if (docList.length === 0) return

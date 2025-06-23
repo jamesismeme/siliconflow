@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client']
-  },
   env: {
     SILICONFLOW_BASE_URL: process.env.SILICONFLOW_BASE_URL,
   },

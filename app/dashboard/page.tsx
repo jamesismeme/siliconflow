@@ -20,19 +20,30 @@ import {
   RefreshCw,
   AlertTriangle
 } from 'lucide-react'
-import { useStats } from '@/lib/hooks/use-stats'
+import { useClientStats } from '@/lib/hooks/use-client-stats'
+import { useTokenStore } from '@/lib/stores/token-store'
+import { Badge } from '@/components/ui/badge'
 
 export default function DashboardPage() {
-  const { data: stats, loading, error, refetch } = useStats('today')
+  const { data: stats, loading, error, refetch } = useClientStats('today')
+  const tokens = useTokenStore(state => state.tokens)
+  const tokenStats = useTokenStore(state => state.stats)
 
   // 计算统计数据
   const successRate = stats?.overview?.totalCalls && stats.overview.totalCalls > 0
-    ? Math.round(stats.overview.successRate * 100) / 100
+    ? Math.round(stats.overview.successRate)
     : 100
 
-  const avgResponseTime = stats?.overview.avgResponseTime
-    ? (stats.overview.avgResponseTime / 1000).toFixed(1)
+  const avgResponseTime = stats?.overview.averageResponseTime
+    ? (stats.overview.averageResponseTime / 1000).toFixed(1)
     : '1.2'
+
+  // 检查 Token 状态
+  const hasTokens = tokens.length > 0
+  const activeTokens = tokens.filter(token => token.isActive).length
+  const hasAvailableTokens = tokens.some(token =>
+    token.isActive && token.usageToday < token.limitPerDay
+  )
   return (
     <div className="min-h-screen bg-black text-white">
       {/* 背景装饰 */}
@@ -58,6 +69,85 @@ export default function DashboardPage() {
             管理您的AI模型调用，监控系统状态，探索强大的AI能力
           </p>
         </div>
+
+        {/* Token 状态提示 */}
+        {!hasTokens ? (
+          <Card className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border-yellow-500/30 backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full bg-yellow-500/20">
+                    <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-yellow-300">需要配置 API Token</h3>
+                    <p className="text-sm text-yellow-200/80">
+                      请先添加您的 SiliconFlow API Token 以开始使用模型服务
+                    </p>
+                  </div>
+                </div>
+                <Link href="/console/tokens">
+                  <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                    配置 Token
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : !hasAvailableTokens ? (
+          <Card className="bg-gradient-to-r from-red-900/20 to-pink-900/20 border-red-500/30 backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full bg-red-500/20">
+                    <AlertTriangle className="h-5 w-5 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-red-300">Token 额度不足</h3>
+                    <p className="text-sm text-red-200/80">
+                      所有 Token 已达到每日限制，请添加新的 Token 或等待重置
+                    </p>
+                  </div>
+                </div>
+                <Link href="/console/tokens">
+                  <Button className="bg-red-600 hover:bg-red-700 text-white">
+                    管理 Token
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 border-green-500/30 backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full bg-green-500/20">
+                    <CheckCircle className="h-5 w-5 text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-green-300">Token 状态正常</h3>
+                    <p className="text-sm text-green-200/80">
+                      {activeTokens} 个活跃 Token，系统运行正常
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {tokenStats && (
+                    <Badge className="bg-green-600/20 text-green-300 border-green-500/30">
+                      使用率: {tokenStats.averageUsageRate.toFixed(1)}%
+                    </Badge>
+                  )}
+                  <Link href="/console/tokens">
+                    <Button variant="outline" className="border-green-500/30 text-green-300 hover:bg-green-500/10">
+                      查看详情
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 快速统计卡片 */}
         {loading ? (

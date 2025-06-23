@@ -6,9 +6,8 @@ export const runtime = 'nodejs'
 // 获取模型列表
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const recommended = searchParams.get('recommended')
+    const category = request.nextUrl.searchParams.get('category')
+    const recommended = request.nextUrl.searchParams.get('recommended')
 
     let models = ALL_MODELS
 

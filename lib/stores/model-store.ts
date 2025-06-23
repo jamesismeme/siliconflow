@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { getDefaultModelByCategory } from '@/lib/constants/models'
+import { LocalStorageManager } from '@/lib/storage'
+import type { CallHistory as StorageCallHistory } from '@/lib/storage/types'
 
 // 模型配置接口
 interface ModelConfig {
@@ -53,6 +55,8 @@ interface ApiResult {
     type: string
     responseTime: number
     timestamp: string
+    tokenId?: string
+    tokenName?: string
   }
 }
 
@@ -138,8 +142,18 @@ export const useModelStore = create<ModelStore>()(
       parameters: defaultParameters,
       isLoading: false,
       result: null,
-      history: [],
-      preferences: defaultPreferences,
+      history: LocalStorageManager.getHistory().map(h => ({
+        id: h.id,
+        model: h.model,
+        type: h.type,
+        parameters: h.parameters,
+        result: h.result,
+        timestamp: h.timestamp
+      })),
+      preferences: {
+        ...defaultPreferences,
+        ...LocalStorageManager.getSettings().preferences
+      },
 
       // 设置选中的模型
       setSelectedModel: (model) => {
@@ -201,38 +215,72 @@ export const useModelStore = create<ModelStore>()(
 
       // 添加到历史记录
       addToHistory: (call) => {
-        const { history, preferences } = get()
-        
+        const { preferences } = get()
+
         if (!preferences.autoSaveHistory) return
 
-        const newHistory = [call, ...history]
-        
-        // 限制历史记录数量
-        if (newHistory.length > preferences.maxHistoryItems) {
-          newHistory.splice(preferences.maxHistoryItems)
+        // 转换为 LocalStorage 格式
+        const storageCall: StorageCallHistory = {
+          id: call.id,
+          model: call.model,
+          type: call.type,
+          parameters: call.parameters,
+          result: call.result,
+          timestamp: call.timestamp
         }
 
-        set({ history: newHistory })
+        // 保存到 LocalStorage
+        LocalStorageManager.addToHistory(storageCall)
+
+        // 更新本地状态
+        const history = LocalStorageManager.getHistory().map(h => ({
+          id: h.id,
+          model: h.model,
+          type: h.type,
+          parameters: h.parameters,
+          result: h.result,
+          timestamp: h.timestamp
+        }))
+
+        set({ history })
       },
 
       // 清空历史记录
-      clearHistory: () => set({ history: [] }),
+      clearHistory: () => {
+        LocalStorageManager.clearHistory()
+        set({ history: [] })
+      },
 
       // 删除单条历史记录
       removeFromHistory: (id) => {
-        const history = get().history
-        set({ history: history.filter(item => item.id !== id) })
+        LocalStorageManager.removeFromHistory(id)
+        const history = LocalStorageManager.getHistory().map(h => ({
+          id: h.id,
+          model: h.model,
+          type: h.type,
+          parameters: h.parameters,
+          result: h.result,
+          timestamp: h.timestamp
+        }))
+        set({ history })
       },
 
       // 设置偏好
       setPreferences: (newPreferences) => {
         const currentPreferences = get().preferences
-        set({ 
-          preferences: { 
-            ...currentPreferences, 
-            ...newPreferences 
-          } 
+        const updatedPreferences = {
+          ...currentPreferences,
+          ...newPreferences
+        }
+
+        // 更新 LocalStorage 中的设置
+        const currentSettings = LocalStorageManager.getSettings()
+        LocalStorageManager.setSettings({
+          ...currentSettings,
+          preferences: updatedPreferences
         })
+
+        set({ preferences: updatedPreferences })
       },
 
       // 重置状态

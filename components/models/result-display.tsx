@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import { 
+import {
   Copy,
   Download,
   Eye,
@@ -135,9 +136,11 @@ export function ResultDisplay({ result, loading, modelType }: ResultDisplayProps
             <div key={index} className="space-y-2">
               {image.url ? (
                 <div className="relative">
-                  <img
+                  <Image
                     src={image.url}
                     alt={`Generated image ${index + 1}`}
+                    width={512}
+                    height={512}
                     className="w-full rounded-lg border"
                   />
                   <div className="absolute top-2 right-2 flex gap-2">

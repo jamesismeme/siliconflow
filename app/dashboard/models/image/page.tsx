@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,7 +26,10 @@ import {
 } from 'lucide-react'
 import { useImageApi } from '@/lib/hooks/use-api'
 import { useModelStore } from '@/lib/stores/model-store'
+import { useTokenStore } from '@/lib/stores/token-store'
 import { toast } from 'sonner'
+import Link from 'next/link'
+import { AlertTriangle, CheckCircle } from 'lucide-react'
 
 // 图像生成历史记录
 interface GeneratedImage {
@@ -64,6 +68,13 @@ export default function ImageGenerationPage() {
     forceSelectDefaultModel
   } = useModelStore()
 
+  // Token 状态检查
+  const tokens = useTokenStore(state => state.tokens)
+  const hasTokens = tokens.length > 0
+  const hasAvailableTokens = tokens.some(token =>
+    token.isActive && token.usageToday < token.limitPerDay
+  )
+
   // 确保使用正确的图像模型
   useEffect(() => {
     // 如果没有模型或者当前模型不是图像类型，强制选择默认图像模型
@@ -75,6 +86,17 @@ export default function ImageGenerationPage() {
   // 生成图像
   const handleGenerate = async () => {
     if (!prompt.trim() || !selectedModel || loading) return
+
+    // 检查 Token 可用性
+    if (!hasTokens) {
+      toast.error('请先添加 API Token')
+      return
+    }
+
+    if (!hasAvailableTokens) {
+      toast.error('所有 Token 已达到每日限制，请添加新的 Token 或等待重置')
+      return
+    }
 
     const imageCount = parameters.n || 1
     const currentPrompt = prompt.trim()
@@ -242,6 +264,55 @@ export default function ImageGenerationPage() {
             使用AI模型生成高质量图像，支持多种风格和参数调节，释放您的创意想象
           </p>
         </div>
+
+        {/* Token 状态提示 */}
+        {!hasTokens ? (
+          <Card className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border-yellow-500/30 backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full bg-yellow-500/20">
+                    <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-yellow-300">需要配置 API Token</h3>
+                    <p className="text-sm text-yellow-200/80">
+                      请先添加您的 SiliconFlow API Token 以开始生成图像
+                    </p>
+                  </div>
+                </div>
+                <Link href="/console/tokens">
+                  <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                    配置 Token
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : !hasAvailableTokens ? (
+          <Card className="bg-gradient-to-r from-red-900/20 to-pink-900/20 border-red-500/30 backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full bg-red-500/20">
+                    <AlertTriangle className="h-5 w-5 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-red-300">Token 额度不足</h3>
+                    <p className="text-sm text-red-200/80">
+                      所有 Token 已达到每日限制，请添加新的 Token 或等待重置
+                    </p>
+                  </div>
+                </div>
+                <Link href="/console/tokens">
+                  <Button className="bg-red-600 hover:bg-red-700 text-white">
+                    管理 Token
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* 左侧：生成控制面板 */}
@@ -422,9 +493,11 @@ export default function ImageGenerationPage() {
                   {generatedImages.map((image) => (
                     <div key={image.id} className="space-y-3 animate-in fade-in-50 duration-500">
                       <div className="relative group">
-                        <img
+                        <Image
                           src={image.url}
                           alt={`Generated image: ${image.prompt}`}
+                          width={512}
+                          height={512}
                           className="w-full rounded-lg border aspect-square object-cover transition-all duration-300 hover:scale-[1.02]"
                           loading="lazy"
                         />

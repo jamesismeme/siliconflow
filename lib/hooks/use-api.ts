@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useModelStore } from '@/lib/stores/model-store'
+import { useTokenActions } from '@/lib/stores/token-store'
 
 // API调用参数接口
 interface InvokeParams {
@@ -32,16 +33,26 @@ interface UseApiReturn {
 export function useApi(): UseApiReturn {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const { setIsLoading, setResult, addToHistory } = useModelStore()
+  const { selectBestToken, recordTokenUsage } = useTokenActions()
 
   const invoke = useCallback(async (params: InvokeParams): Promise<ApiResponse> => {
     setLoading(true)
     setIsLoading(true)
     setError(null)
+    const startTime = Date.now()
 
     try {
       console.log('[useApi] Invoking:', params)
+
+      // 选择最佳 Token
+      const token = selectBestToken()
+      if (!token) {
+        throw new Error('没有可用的 Token，请先添加 API Token')
+      }
+
+      console.log('[useApi] Using token:', token.name)
 
       let requestOptions: RequestInit
 
@@ -52,6 +63,7 @@ export function useApi(): UseApiReturn {
         formData.append('model', params.model)
         formData.append('type', params.type)
         formData.append('file', params.parameters.file)
+        formData.append('token', token.value) // 添加 Token
 
         // 添加其他参数
         Object.keys(params.parameters).forEach(key => {
@@ -71,13 +83,21 @@ export function useApi(): UseApiReturn {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(params)
+          body: JSON.stringify({
+            ...params,
+            token: token.value // 添加 Token
+          })
         }
       }
 
       const response = await fetch('/api/invoke', requestOptions)
 
       const result: ApiResponse = await response.json()
+
+      // 记录 Token 使用
+      if (result.success) {
+        recordTokenUsage(token.id)
+      }
 
       // 更新Store状态
       setResult(result)
@@ -89,7 +109,18 @@ export function useApi(): UseApiReturn {
           model: params.model,
           type: params.type,
           parameters: params.parameters,
-          result,
+          result: {
+            ...result,
+            metadata: {
+              model: params.model,
+              type: params.type,
+              responseTime: Date.now() - startTime,
+              timestamp: new Date().toISOString(),
+              ...result.metadata,
+              tokenId: token.id,
+              tokenName: token.name
+            }
+          },
           timestamp: new Date().toISOString()
         })
       }
@@ -114,7 +145,7 @@ export function useApi(): UseApiReturn {
       setLoading(false)
       setIsLoading(false)
     }
-  }, [setIsLoading, setResult, addToHistory])
+  }, [setIsLoading, setResult, addToHistory, selectBestToken, recordTokenUsage])
 
   const clearError = useCallback(() => {
     setError(null)
@@ -157,6 +188,7 @@ export function useChatApi() {
 export function useStreamChatApi() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { selectBestToken, recordTokenUsage } = useTokenActions()
 
   const streamChat = useCallback(async (
     model: string,
@@ -170,6 +202,15 @@ export function useStreamChatApi() {
 
     try {
       console.log('[StreamChat] Starting stream for model:', model)
+
+      // 选择最佳 Token
+      const token = selectBestToken()
+      if (!token) {
+        throw new Error('没有可用的 Token，请先添加 API Token')
+      }
+
+      console.log('[StreamChat] Using token:', token.name)
+
       const response = await fetch('/api/invoke/stream', {
         method: 'POST',
         headers: {
@@ -178,6 +219,7 @@ export function useStreamChatApi() {
         body: JSON.stringify({
           model,
           type: 'chat',
+          token: token.value, // 添加 Token
           parameters: {
             messages,
             stream: true,
@@ -213,6 +255,8 @@ export function useStreamChatApi() {
           if (line.startsWith('data: ')) {
             const data = line.slice(6)
             if (data === '[DONE]') {
+              // 记录 Token 使用
+              recordTokenUsage(token.id)
               onComplete()
               return
             }
@@ -233,6 +277,8 @@ export function useStreamChatApi() {
         }
       }
 
+      // 记录 Token 使用
+      recordTokenUsage(token.id)
       onComplete()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -240,7 +286,7 @@ export function useStreamChatApi() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [selectBestToken, recordTokenUsage])
 
   const clearError = useCallback(() => {
     setError(null)

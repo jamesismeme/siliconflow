@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { ConsoleAuthWrapper } from '@/components/console/auth-wrapper'
 import {
   BarChart3,
   Settings,
@@ -12,11 +11,9 @@ import {
   Menu,
   X,
   Shield,
-  Database,
   Activity,
   FileText,
-  Clock,
-  LogOut
+  Clock
 } from 'lucide-react'
 
 const navigation = [
@@ -24,37 +21,25 @@ const navigation = [
     name: 'Token管理',
     href: '/console/tokens',
     icon: Key,
-    description: '管理API访问令牌'
-  },
-  {
-    name: '统计概览',
-    href: '/console/stats',
-    icon: BarChart3,
-    description: '查看系统统计数据'
+    description: '管理本地API访问令牌'
   },
   {
     name: '使用统计',
+    href: '/console/stats',
+    icon: BarChart3,
+    description: '查看本地使用统计'
+  },
+  {
+    name: '调用历史',
     href: '/console/stats/usage',
     icon: Activity,
-    description: '查看API使用情况'
-  },
-  {
-    name: '实时监控',
-    href: '/console/stats/realtime',
-    icon: Database,
-    description: '实时系统监控'
-  },
-  {
-    name: '日志管理',
-    href: '/console/stats/logs',
-    icon: FileText,
-    description: '查看系统日志'
+    description: '查看API调用历史'
   },
   {
     name: '系统设置',
     href: '/console/settings',
     icon: Settings,
-    description: '配置系统参数'
+    description: '配置用户偏好设置'
   }
 ]
 
@@ -65,23 +50,9 @@ export default function ConsoleLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
-  const router = useRouter()
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/console/auth', {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-      router.push('/console/login')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
 
   return (
-    <ConsoleAuthWrapper>
-      <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white">
       {/* 背景装饰 */}
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 -z-10" />
       
@@ -108,8 +79,8 @@ export default function ConsoleLayout({
                 <Shield className="h-6 w-6 text-red-400" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-white">管理控制台</h1>
-                <p className="text-xs text-gray-400">Administrator Console</p>
+                <h1 className="text-lg font-bold text-white">用户控制台</h1>
+                <p className="text-xs text-gray-400">User Console</p>
               </div>
             </div>
             <button
@@ -152,22 +123,14 @@ export default function ConsoleLayout({
           </nav>
 
           {/* 底部信息 */}
-          <div className="p-4 border-t border-gray-800 space-y-3">
+          <div className="p-4 border-t border-gray-800">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50">
               <Clock className="h-4 w-4 text-gray-400" />
               <div className="text-xs text-gray-400">
-                <div>管理员权限</div>
-                <div className="text-gray-500">Console Access</div>
+                <div>本地存储模式</div>
+                <div className="text-gray-500">LocalStorage Mode</div>
               </div>
             </div>
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-600/10 transition-all duration-200 group"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="text-sm">退出登录</span>
-            </button>
           </div>
         </div>
       </div>
@@ -185,8 +148,8 @@ export default function ConsoleLayout({
                 <Menu className="h-5 w-5" />
               </button>
               <div>
-                <h2 className="text-lg font-semibold text-white">SiliconFlow 管理控制台</h2>
-                <p className="text-sm text-gray-400">系统管理与监控平台</p>
+                <h2 className="text-lg font-semibold text-white">SiliconFlow 用户控制台</h2>
+                <p className="text-sm text-gray-400">个人设置与数据管理</p>
               </div>
             </div>
             <Link
@@ -204,6 +167,5 @@ export default function ConsoleLayout({
         </main>
       </div>
     </div>
-    </ConsoleAuthWrapper>
   )
 }
