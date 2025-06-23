@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 强制使用黑色主题 */
+    --background: 0 0% 0%;
+    --foreground: 210 40% 98%;
+    --card: 220 13% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 13% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* 保持相同的黑色主题 */
+    --background: 0 0% 0%;
+    --foreground: 210 40% 98%;
+    --card: 220 13% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 13% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-black text-white;
+    background: black !important;
+    color: white !important;
+  }
+
+  html {
+    background: black !important;
+  }
+}
+
+@layer components {
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* 按钮文字优化 */
+  button {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 按钮内文字不受变换影响 */
+  button * {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* 确保按钮文字清晰显示 */
+  .button-text {
+    position: relative;
+    z-index: 10;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    color: inherit !important;
+  }
+
+  /* 强制按钮文字颜色继承 */
+  button span,
+  button svg {
+    color: inherit !important;
+    fill: currentColor !important;
+  }
+
+  /* 确保渐变按钮的文字为白色 */
+  button[class*="from-blue"] span,
+  button[class*="from-blue"] svg,
+  button[class*="from-purple"] span,
+  button[class*="from-purple"] svg,
+  button[class*="from-red"] span,
+  button[class*="from-red"] svg {
+    color: white !important;
+    fill: white !important;
+  }
+
+  /* 输入框文字强制显示 */
+  textarea,
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"] {
+    color: white !important;
+    background-color: rgb(31, 41, 55) !important;
+    border-color: rgb(55, 65, 81) !important;
+  }
+
+  textarea::placeholder,
+  input::placeholder {
+    color: rgb(156, 163, 175) !important;
+    opacity: 1 !important;
+  }
+
+  /* 选择器文字强制显示 */
+  [role="combobox"],
+  [role="listbox"],
+  [role="option"] {
+    color: white !important;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground));
+}
+
+/* 代码块样式 */
+pre {
+  @apply rounded-lg bg-muted p-4 overflow-x-auto;
+}
+
+code {
+  @apply bg-muted px-1 py-0.5 rounded text-sm;
+}
+
+/* 表格样式 */
+table {
+  @apply w-full border-collapse;
+}
+
+th, td {
+  @apply border border-border px-4 py-2 text-left;
+}
+
+th {
+  @apply bg-muted font-semibold;
+}
+
+/* 响应式隐藏类 */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none;
+  }
+}
