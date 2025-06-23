@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Bot, Zap, Shield, BarChart3, ArrowRight, Sparkles, Brain, Code, MessageSquare, Image, Mic, FileText } from 'lucide-react'
+import { Bot, Zap, Shield, BarChart3, ArrowRight, Sparkles, Brain, Code, MessageSquare, Image, Mic, FileText, Key } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -26,12 +26,20 @@ export default function HomePage() {
                 SiliconFlow Platform
               </span>
             </div>
-            <Link href="/dashboard">
-              <Button>
-                <span className="button-text">进入控制台</span>
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/console">
+                <Button variant="outline" size="sm" className="hidden sm:flex">
+                  <Key className="mr-2 h-4 w-4" />
+                  <span className="button-text">Token 管理</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button>
+                  <span className="button-text">进入控制台</span>
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
@@ -59,11 +67,19 @@ export default function HomePage() {
             </h1>
 
             {/* 副标题 */}
-            <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto leading-relaxed">
               集成 SiliconFlow 全栈AI能力，从对话到图像生成，从语音处理到文本分析。
               <br className="hidden md:block" />
               <span className="text-gray-300">为开发者打造的专业级AI基础设施。</span>
             </p>
+
+            {/* 提示信息 */}
+            <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-2 mb-12">
+              <Key className="h-4 w-4 text-orange-400" />
+              <span className="text-sm text-orange-300">
+                开始前请先配置您的 SiliconFlow API Token
+              </span>
+            </div>
 
             {/* CTA按钮 */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -71,6 +87,12 @@ export default function HomePage() {
                 <Button size="lg">
                   <span className="button-text">开始构建</span>
                   <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/console">
+                <Button variant="outline" size="lg" className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400">
+                  <Key className="mr-2 h-5 w-5" />
+                  <span className="button-text">配置 Token</span>
                 </Button>
               </Link>
               <Link href="/dashboard/models">
@@ -237,6 +259,12 @@ export default function HomePage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+                <Link href="/console">
+                  <Button variant="outline" size="lg" className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400">
+                    <Key className="mr-2 h-5 w-5" />
+                    <span className="button-text">添加 API Token</span>
+                  </Button>
+                </Link>
                 <Link href="/dashboard/models">
                   <Button variant="outline" size="lg">
                     <span className="button-text">查看文档</span>
@@ -273,10 +301,10 @@ export default function HomePage() {
             <div>
               <h3 className="text-white font-semibold mb-4">平台</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/dashboard" className="hover:text-white transition-colors">控制台</Link></li>
-                <li><Link href="/dashboard/tokens" className="hover:text-white transition-colors">API管理</Link></li>
-                <li><Link href="/dashboard/settings" className="hover:text-white transition-colors">设置</Link></li>
-                <li><Link href="/dashboard/monitor" className="hover:text-white transition-colors">监控</Link></li>
+                <li><Link href="/dashboard" className="hover:text-white transition-colors">模型控制台</Link></li>
+                <li><Link href="/console/tokens" className="hover:text-white transition-colors">Token 管理</Link></li>
+                <li><Link href="/console/settings" className="hover:text-white transition-colors">系统设置</Link></li>
+                <li><Link href="/console/stats" className="hover:text-white transition-colors">使用统计</Link></li>
               </ul>
             </div>
           </div>
