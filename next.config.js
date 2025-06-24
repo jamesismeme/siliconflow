@@ -24,7 +24,7 @@ const nextConfig = {
     ]
   },
   images: {
-    domains: ['api.siliconflow.cn'],
+    domains: ['api.siliconflow.cn', 'sc-maas.oss-cn-shanghai.aliyuncs.com'],
   },
 }
 

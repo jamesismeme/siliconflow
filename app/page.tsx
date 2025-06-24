@@ -28,9 +28,10 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-3">
               <Link href="/console">
-                <Button size="sm" className="hidden sm:flex">
+                <Button className="hidden sm:flex">
                   <Settings className="mr-2 h-4 w-4" />
                   <span className="button-text">后台管理</span>
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/dashboard">

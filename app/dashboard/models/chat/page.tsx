@@ -56,10 +56,16 @@ export default function ChatPage() {
 
   // Token 状态检查
   const tokens = useTokenStore(state => state.tokens)
+  const loadTokens = useTokenStore(state => state.loadTokens)
   const hasTokens = tokens.length > 0
   const hasAvailableTokens = tokens.some(token =>
     token.isActive && token.usageToday < token.limitPerDay
   )
+
+  // 确保 Token 数据已加载
+  useEffect(() => {
+    loadTokens()
+  }, [])
 
   // 确保使用正确的对话模型
   useEffect(() => {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -28,6 +29,12 @@ export default function DashboardPage() {
   const { data: stats, loading, error, refetch } = useClientStats('today')
   const tokens = useTokenStore(state => state.tokens)
   const tokenStats = useTokenStore(state => state.stats)
+  const loadTokens = useTokenStore(state => state.loadTokens)
+
+  // 确保 Token 数据已加载
+  useEffect(() => {
+    loadTokens()
+  }, [])
 
   // 计算统计数据
   const successRate = stats?.overview?.totalCalls && stats.overview.totalCalls > 0
@@ -105,7 +112,7 @@ export default function DashboardPage() {
                   <div>
                     <h3 className="font-semibold text-red-300">Token 额度不足</h3>
                     <p className="text-sm text-red-200/80">
-                      所有 Token 已达到每日限制，请添加新的 Token 或等待重置
+                      所有 Token 已达到每分钟限制，请添加新的 Token 或等待重置
                     </p>
                   </div>
                 </div>

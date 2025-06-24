@@ -69,10 +69,16 @@ export default function TextProcessingPage() {
 
   // Token 状态检查
   const tokens = useTokenStore(state => state.tokens)
+  const loadTokens = useTokenStore(state => state.loadTokens)
   const hasTokens = tokens.length > 0
   const hasAvailableTokens = tokens.some(token =>
     token.isActive && token.usageToday < token.limitPerDay
   )
+
+  // 确保 Token 数据已加载
+  useEffect(() => {
+    loadTokens()
+  }, [])
 
   // 确保使用正确的文本处理模型
   useEffect(() => {
@@ -90,12 +96,14 @@ export default function TextProcessingPage() {
     forceSelectDefaultModel(category)
   }, [activeTab, forceSelectDefaultModel])
 
-  const loading = embeddingLoading || rerankLoading
+  // 分别处理不同操作的加载状态
+  const isEmbeddingLoading = embeddingLoading
+  const isRerankLoading = rerankLoading
   const error = embeddingError || rerankError
 
   // 处理文本嵌入
   const handleEmbedding = async (isBatch = false) => {
-    if (!selectedModel || loading) return
+    if (!selectedModel || isEmbeddingLoading) return
 
     // 检查 Token 可用性
     if (!hasTokens) {
@@ -158,7 +166,7 @@ export default function TextProcessingPage() {
 
   // 处理重排序
   const handleRerank = async () => {
-    if (!query.trim() || !documents.trim() || !selectedModel || loading) return
+    if (!query.trim() || !documents.trim() || !selectedModel || isRerankLoading) return
 
     // 检查 Token 可用性
     if (!hasTokens) {
@@ -341,14 +349,14 @@ export default function TextProcessingPage() {
                     />
                     <Button
                       onClick={() => handleEmbedding(false)}
-                      disabled={!singleText.trim() || !selectedModel || loading}
+                      disabled={!singleText.trim() || !selectedModel || isEmbeddingLoading}
                       className="w-full mt-2"
                       size="sm"
                     >
-                      {loading ? (
+                      {isEmbeddingLoading && processingTask?.type === 'embedding' && !processingTask?.isBatch ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          处理中...
+                          生成中...
                         </>
                       ) : (
                         <>
@@ -372,11 +380,11 @@ export default function TextProcessingPage() {
                     </p>
                     <Button
                       onClick={() => handleEmbedding(true)}
-                      disabled={!batchTexts.trim() || !selectedModel || loading}
+                      disabled={!batchTexts.trim() || !selectedModel || isEmbeddingLoading}
                       className="w-full mt-2"
                       size="sm"
                     >
-                      {loading ? (
+                      {isEmbeddingLoading && processingTask?.type === 'embedding' && processingTask?.isBatch ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           批量处理中...
@@ -417,10 +425,10 @@ export default function TextProcessingPage() {
 
                   <Button
                     onClick={handleRerank}
-                    disabled={!query.trim() || !documents.trim() || !selectedModel || loading}
+                    disabled={!query.trim() || !documents.trim() || !selectedModel || isRerankLoading}
                     className="w-full"
                   >
-                    {loading ? (
+                    {isRerankLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         重排序中...
@@ -562,7 +570,7 @@ export default function TextProcessingPage() {
                       setResults([])
                       toast.info('已清空所有处理结果')
                     }}
-                    disabled={loading}
+                    disabled={isEmbeddingLoading || isRerankLoading}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     <span className="button-text">清空</span>

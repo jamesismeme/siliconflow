@@ -401,7 +401,7 @@ export default function TokensPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="limit" className="text-gray-300">每日限制</Label>
+                    <Label htmlFor="limit" className="text-gray-300">每分钟限制 (RPM)</Label>
                     <Input
                       id="limit"
                       type="number"
@@ -448,7 +448,7 @@ export default function TokensPage() {
               <CardContent>
                 <div className="text-2xl font-bold text-white">{stats.totalUsageToday}</div>
                 <p className="text-xs text-gray-400">
-                  限制: {stats.totalLimitPerDay}
+                  限制: {stats.totalLimitPerDay} RPM
                 </p>
               </CardContent>
             </Card>
@@ -549,7 +549,7 @@ export default function TokensPage() {
                           </p>
                           <div className="flex items-center space-x-4 mt-2">
                             <span className="text-sm text-gray-400">
-                              今日使用: {token.usageToday}/{token.limitPerDay}
+                              当前使用: {token.usageToday}/{token.limitPerDay} RPM
                             </span>
                             <span className="text-sm text-gray-400">
                               使用率: {getUsagePercentage(token.usageToday, token.limitPerDay)}%
@@ -642,7 +642,7 @@ export default function TokensPage() {
               />
             </div>
             <div>
-              <Label htmlFor="edit-limit" className="text-gray-300">每日限制</Label>
+              <Label htmlFor="edit-limit" className="text-gray-300">每分钟限制 (RPM)</Label>
               <Input
                 id="edit-limit"
                 type="number"

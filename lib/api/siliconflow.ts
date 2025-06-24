@@ -168,18 +168,45 @@ export class SiliconFlowClient {
     language?: string
     response_format?: string
   }): Promise<AudioTranscriptionResponse> {
-    const formData = new FormData()
-    formData.append('file', params.file)
-    formData.append('model', params.model)
-    if (params.language) formData.append('language', params.language)
-    if (params.response_format) formData.append('response_format', params.response_format)
+    try {
+      const formData = new FormData()
+      formData.append('file', params.file)
+      formData.append('model', params.model)
+      if (params.language) formData.append('language', params.language)
+      if (params.response_format) formData.append('response_format', params.response_format)
 
-    const response: AxiosResponse<AudioTranscriptionResponse> = await this.client.post('/audio/transcriptions', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    return response.data
+      console.log('[SiliconFlow] Audio transcription request:', {
+        model: params.model,
+        fileName: params.file instanceof File ? params.file.name : 'blob',
+        fileSize: params.file.size,
+        language: params.language,
+        response_format: params.response_format
+      })
+
+      const response: AxiosResponse<AudioTranscriptionResponse> = await this.client.post('/audio/transcriptions', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      console.log('[SiliconFlow] Audio transcription response:', response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('[SiliconFlow] Audio transcription error:', error)
+
+      // 如果是 Axios 错误，尝试获取更详细的错误信息
+      if (error.response) {
+        console.error('[SiliconFlow] Error response status:', error.response.status)
+        console.error('[SiliconFlow] Error response data:', error.response.data)
+
+        // 如果响应数据是字符串（可能是 HTML 错误页面），抛出更有意义的错误
+        if (typeof error.response.data === 'string') {
+          throw new Error(`API Error (${error.response.status}): ${error.response.data.substring(0, 100)}...`)
+        }
+      }
+
+      throw error
+    }
   }
 
   // 文字转语音
