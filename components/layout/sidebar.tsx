@@ -9,7 +9,8 @@ import {
   MessageSquare,
   Image,
   Mic,
-  FileText
+  FileText,
+  Users
 } from 'lucide-react'
 
 const navigation = [
@@ -25,7 +26,8 @@ const navigation = [
     icon: Bot,
     description: '调用各种AI模型',
     children: [
-      { name: '对话模型', href: '/dashboard/models/chat', icon: MessageSquare },
+      { name: '单次对话', href: '/dashboard/models/chat', icon: MessageSquare },
+      { name: '多轮对话', href: '/dashboard/models/conversation', icon: Users },
       { name: '图像生成', href: '/dashboard/models/image', icon: Image },
       { name: '语音处理', href: '/dashboard/models/audio', icon: Mic },
       { name: '文本处理', href: '/dashboard/models/text', icon: FileText },

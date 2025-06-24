@@ -175,28 +175,51 @@ export default function ConversationPage() {
           {}
         )
 
-        if (result.success && result.data?.content) {
-          const assistantMessage: Message = {
-            id: `assistant-${model.name}-${Date.now()}`,
-            role: 'assistant',
-            content: result.data.content,
-            timestamp: new Date().toISOString(),
-            modelId: model.name
+        console.log(`[多轮对话] 模型 ${model.name} 响应:`, result)
+
+        if (result.success && result.data) {
+          // 处理不同的响应格式
+          let content = ''
+
+          if (typeof result.data === 'string') {
+            content = result.data
+          } else if (result.data.content) {
+            content = result.data.content
+          } else if (result.data.choices && result.data.choices[0]?.message?.content) {
+            content = result.data.choices[0].message.content
+          } else if (result.data.message && result.data.message.content) {
+            content = result.data.message.content
+          } else {
+            console.error(`[多轮对话] 模型 ${model.name} 响应格式未知:`, result.data)
+            throw new Error(`响应格式未知: ${JSON.stringify(result.data)}`)
           }
 
-          setConversationState(prev => ({
-            ...prev,
-            conversations: {
-              ...prev.conversations,
-              [model.name]: [...(prev.conversations[model.name] || []), assistantMessage]
-            },
-            isLoading: {
-              ...prev.isLoading,
-              [model.name]: false
+          if (content) {
+            const assistantMessage: Message = {
+              id: `assistant-${model.name}-${Date.now()}`,
+              role: 'assistant',
+              content: content,
+              timestamp: new Date().toISOString(),
+              modelId: model.name
             }
-          }))
+
+            setConversationState(prev => ({
+              ...prev,
+              conversations: {
+                ...prev.conversations,
+                [model.name]: [...(prev.conversations[model.name] || []), assistantMessage]
+              },
+              isLoading: {
+                ...prev.isLoading,
+                [model.name]: false
+              }
+            }))
+          } else {
+            throw new Error('响应内容为空')
+          }
         } else {
-          throw new Error('响应格式错误')
+          console.error(`[多轮对话] 模型 ${model.name} API调用失败:`, result)
+          throw new Error(result.error || 'API调用失败')
         }
       } catch (error) {
         console.error(`模型 ${model.name} 响应失败:`, error)
