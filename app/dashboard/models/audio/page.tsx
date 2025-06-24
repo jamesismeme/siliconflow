@@ -85,72 +85,107 @@ export default function AudioProcessingPage() {
     }
   }, [selectedModel, forceSelectDefaultModel])
 
+  // 检查音频文件时长
+  const checkAudioDuration = (file: File): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio()
+      const url = URL.createObjectURL(file)
+
+      audio.addEventListener('loadedmetadata', () => {
+        URL.revokeObjectURL(url)
+        resolve(audio.duration)
+      })
+
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(url)
+        reject(new Error('无法读取音频文件'))
+      })
+
+      audio.src = url
+    })
+  }
+
   // 处理文件上传
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      // 检查文件类型 - 使用正确的MIME类型和文件扩展名
-      const allowedTypes = [
-        // MP3 格式
-        'audio/mpeg',
-        'audio/mp3',
-        'audio/mpeg3',
-        'audio/x-mpeg-3',
+    if (!file) return
 
-        // WAV 格式
-        'audio/wav',
-        'audio/wave',
-        'audio/x-wav',
-        'audio/vnd.wave',
+    // 检查文件类型 - 使用正确的MIME类型和文件扩展名
+    const allowedTypes = [
+      // MP3 格式
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/mpeg3',
+      'audio/x-mpeg-3',
 
-        // M4A 格式
-        'audio/m4a',
-        'audio/mp4',
-        'audio/x-m4a',
-        'audio/aac',
+      // WAV 格式
+      'audio/wav',
+      'audio/wave',
+      'audio/x-wav',
+      'audio/vnd.wave',
 
-        // FLAC 格式
-        'audio/flac',
-        'audio/x-flac',
+      // M4A 格式
+      'audio/m4a',
+      'audio/mp4',
+      'audio/x-m4a',
+      'audio/aac',
 
-        // 其他可能的格式
-        'audio/ogg',      // OGG (如果支持)
-        'audio/webm',     // WebM (如果支持)
-        ''                // 某些系统可能返回空字符串
-      ]
+      // FLAC 格式
+      'audio/flac',
+      'audio/x-flac',
 
-      // 同时检查文件扩展名作为主要验证方式
-      const fileName = file.name.toLowerCase()
-      const allowedExtensions = ['.mp3', '.wav', '.m4a', '.flac']
-      const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
+      // 其他可能的格式
+      'audio/ogg',      // OGG (如果支持)
+      'audio/webm',     // WebM (如果支持)
+      ''                // 某些系统可能返回空字符串
+    ]
 
-      // 获取文件扩展名
-      const fileExtension = fileName.substring(fileName.lastIndexOf('.'))
+    // 同时检查文件扩展名作为主要验证方式
+    const fileName = file.name.toLowerCase()
+    const allowedExtensions = ['.mp3', '.wav', '.m4a', '.flac']
+    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
 
-      // 优先使用文件扩展名验证，MIME类型作为辅助
-      const isValidFile = hasValidExtension || allowedTypes.includes(file.type)
+    // 获取文件扩展名
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.'))
 
-      if (!isValidFile) {
-        alert(`请上传支持的音频格式：MP3, WAV, M4A, FLAC\n\n文件信息：\n文件名：${file.name}\n文件类型：${file.type || '未知'}\n文件扩展名：${fileExtension}\n\n请确保文件是有效的音频文件。`)
-        return
-      }
+    // 优先使用文件扩展名验证，MIME类型作为辅助
+    const isValidFile = hasValidExtension || allowedTypes.includes(file.type)
 
-      // 检查文件大小 (25MB限制)
-      if (file.size > 25 * 1024 * 1024) {
-        alert('文件大小不能超过25MB')
-        return
-      }
+    if (!isValidFile) {
+      toast.error(`请上传支持的音频格式：MP3, WAV, M4A, FLAC\n\n文件信息：\n文件名：${file.name}\n文件类型：${file.type || '未知'}\n文件扩展名：${fileExtension}\n\n请确保文件是有效的音频文件。`)
+      event.target.value = '' // 清空文件选择
+      return
+    }
+
+    // 检查文件大小 (10MB限制，基于API实际限制)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(`文件大小超过限制，最大支持 10MB，当前文件: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
+      event.target.value = '' // 清空文件选择
+      return
+    }
+
+    try {
+      // 检查音频时长（用于显示信息，不做限制）
+      const duration = await checkAudioDuration(file)
 
       console.log('文件上传成功:', {
         name: file.name,
         type: file.type || '未知类型',
         extension: fileExtension,
         size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        duration: `${duration.toFixed(1)} 秒`,
         validExtension: hasValidExtension,
         validMimeType: allowedTypes.includes(file.type)
       })
 
       setAudioFile(file)
+      toast.success(`已选择文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB, ${duration.toFixed(1)}秒)`)
+    } catch (error) {
+      console.error('检查音频文件失败:', error)
+      // 如果无法读取时长，仍然允许上传
+      console.log('无法读取音频时长，但仍允许上传')
+      setAudioFile(file)
+      toast.success(`已选择文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`)
     }
   }
 
@@ -331,7 +366,7 @@ export default function AudioProcessingPage() {
                       />
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      支持 MP3, WAV, M4A, FLAC 格式，最大25MB
+                      支持 MP3, WAV, M4A, FLAC 格式，最大10MB
                     </p>
                     <div className="mt-2 text-xs text-gray-400">
                       <details className="cursor-pointer">
@@ -407,6 +442,7 @@ export default function AudioProcessingPage() {
                       <li>• 比Whisper快15倍，延迟更低</li>
                       <li>• 支持情绪识别和说话人识别</li>
                       <li>• 可输出JSON、文本、SRT、VTT等格式</li>
+                      <li>• 文件大小限制：最大10MB</li>
                     </ul>
                   </div>
                 </div>
