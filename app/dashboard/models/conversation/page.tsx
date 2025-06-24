@@ -9,6 +9,10 @@ import { useTokenStore } from '@/lib/stores/token-store'
 import { useStreamChatApi } from '@/lib/hooks/use-api'
 import { ModelConfig, getModelsByCategory } from '@/lib/constants/models'
 import { toast } from 'sonner'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import {
   MessageCircle,
   Send,
@@ -34,6 +38,60 @@ interface ConversationState {
   selectedModels: ModelConfig[]
   conversations: Record<string, Message[]>
   isLoading: Record<string, boolean>
+}
+
+// 消息渲染组件，支持代码高亮
+const MessageContent = ({ content, isStreaming }: { content: string; isStreaming?: boolean }) => {
+  return (
+    <div className="text-sm text-gray-200">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code({ node, className, children, ...props }: any) {
+            const match = /language-(\w+)/.exec(className || '')
+            const language = match ? match[1] : ''
+            const isInline = !className
+
+            return !isInline && language ? (
+              <SyntaxHighlighter
+                style={oneDark as any}
+                language={language}
+                PreTag="div"
+                className="rounded-md my-2"
+                {...props}
+              >
+                {String(children).replace(/\n$/, '')}
+              </SyntaxHighlighter>
+            ) : (
+              <code className="bg-gray-700 px-1 py-0.5 rounded text-xs font-mono" {...props}>
+                {children}
+              </code>
+            )
+          },
+          p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap break-words">{children}</p>,
+          ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+          li: ({ children }) => <li className="text-gray-200">{children}</li>,
+          h1: ({ children }) => <h1 className="text-lg font-bold mb-2 text-white">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-base font-bold mb-2 text-white">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-sm font-bold mb-1 text-white">{children}</h3>,
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-500 pl-4 italic mb-2 text-gray-300">
+              {children}
+            </blockquote>
+          ),
+          strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+          em: ({ children }) => <em className="italic">{children}</em>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+      {/* 流式输入光标效果 */}
+      {isStreaming && content && (
+        <span className="inline-block w-2 h-4 bg-blue-400 ml-1 animate-pulse" />
+      )}
+    </div>
+  )
 }
 
 export default function ConversationPage() {
@@ -186,9 +244,10 @@ export default function ConversationPage() {
       try {
         console.log(`[多轮对话] 开始流式对话 - 模型: ${model.name}`)
 
-        const messages = conversationState.conversations[model.name] || []
-        const allMessages = [...messages, userMessage]
-        const messageHistory = allMessages.map(msg => ({ role: msg.role, content: msg.content }))
+        // 获取当前模型的消息历史（不包括刚添加的AI占位消息）
+        const currentMessages = conversationState.conversations[model.name] || []
+        const userMessages = currentMessages.filter(msg => msg.role === 'user')
+        const messageHistory = [...userMessages, userMessage].map(msg => ({ role: msg.role, content: msg.content }))
 
         const assistantMessageId = assistantMessageIds[model.name]
 
@@ -198,18 +257,25 @@ export default function ConversationPage() {
           {}, // parameters
           // onChunk: 处理流式数据块
           (chunk: string) => {
+            console.log(`[多轮对话] 模型 ${model.name} 收到数据块:`, chunk)
             setConversationState(prev => {
               const newConversations = { ...prev.conversations }
               if (newConversations[model.name]) {
                 const messages = [...newConversations[model.name]]
                 const messageIndex = messages.findIndex(msg => msg.id === assistantMessageId)
                 if (messageIndex !== -1) {
-                  messages[messageIndex] = {
+                  const updatedMessage = {
                     ...messages[messageIndex],
                     content: messages[messageIndex].content + chunk
                   }
+                  messages[messageIndex] = updatedMessage
                   newConversations[model.name] = messages
+                  console.log(`[多轮对话] 模型 ${model.name} 更新后内容长度:`, updatedMessage.content.length)
+                } else {
+                  console.error(`[多轮对话] 模型 ${model.name} 找不到消息ID:`, assistantMessageId)
                 }
+              } else {
+                console.error(`[多轮对话] 模型 ${model.name} 对话记录不存在`)
               }
               return {
                 ...prev,
@@ -542,13 +608,10 @@ export default function ConversationPage() {
                                     {new Date(message.timestamp).toLocaleTimeString()}
                                   </span>
                                 </div>
-                                <div className="text-sm text-gray-200 whitespace-pre-wrap break-words">
-                                  {message.content}
-                                  {/* 流式输入光标效果 */}
-                                  {message.role === 'assistant' && isLoading && message.content && (
-                                    <span className="inline-block w-2 h-4 bg-blue-400 ml-1 animate-pulse" />
-                                  )}
-                                </div>
+                                <MessageContent
+                                  content={message.content}
+                                  isStreaming={message.role === 'assistant' && isLoading && !!message.content}
+                                />
                               </div>
                               <Button
                                 variant="ghost"
