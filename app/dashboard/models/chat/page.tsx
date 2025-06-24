@@ -311,13 +311,16 @@ export default function ChatPage() {
           <div className="flex items-center gap-4">
             <div className="inline-flex items-center gap-2 bg-gray-800/50 border border-gray-700/50 rounded-full px-4 py-2">
               <MessageSquare className="h-4 w-4 text-blue-400" />
-              <span className="text-sm text-gray-300">智能对话生成</span>
+              <span className="text-sm text-gray-300">单次对话</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight">
               <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                对话模型
+                单次对话
               </span>
             </h1>
+            <p className="text-gray-400 mt-2">
+              快速体验AI对话，每次独立交互，适合简单问答和测试
+            </p>
           </div>
         </div>
 

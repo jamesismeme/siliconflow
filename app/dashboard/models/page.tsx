@@ -398,6 +398,67 @@ export default function ModelsPage() {
           </Link>
         </div>
 
+        {/* 对话模式选择 */}
+        <div className="grid gap-4 md:grid-cols-2 mb-8">
+          <Link href="/dashboard/models/chat">
+            <Card className="bg-gradient-to-br from-blue-900/20 to-blue-800/10 border-blue-700/50 hover:border-blue-600/70 transition-all duration-300 group cursor-pointer">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/20">
+                    <MessageSquare className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg text-white group-hover:text-blue-300 transition-colors">
+                      单次对话
+                    </CardTitle>
+                    <p className="text-sm text-gray-400">
+                      快速问答，每次独立交互
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-gray-300">
+                  适合简单问答、快速测试和单次查询，每次对话都是全新开始
+                </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <Badge variant="secondary" className="text-xs">快速响应</Badge>
+                  <Badge variant="secondary" className="text-xs">独立会话</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/dashboard/models/conversation">
+            <Card className="bg-gradient-to-br from-purple-900/20 to-purple-800/10 border-purple-700/50 hover:border-purple-600/70 transition-all duration-300 group cursor-pointer">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/20">
+                    <Users className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg text-white group-hover:text-purple-300 transition-colors">
+                      多轮对话
+                    </CardTitle>
+                    <p className="text-sm text-gray-400">
+                      与多个AI模型同时对话
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-sm text-gray-300">
+                  同时与多个模型对话，比较不同AI的回答，体验多样化的AI交互
+                </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <Badge variant="secondary" className="text-xs">多模型对比</Badge>
+                  <Badge variant="secondary" className="text-xs">连续对话</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
         {/* 统计信息 */}
         <div className="grid gap-6 md:grid-cols-5">
           <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm hover:bg-gray-800/50 transition-all duration-300 group">
