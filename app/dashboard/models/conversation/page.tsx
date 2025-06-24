@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useTokenStore } from '@/lib/stores/token-store'
-import { useChatApi } from '@/lib/hooks/use-api'
+import { useStreamChatApi } from '@/lib/hooks/use-api'
 import { ModelConfig, getModelsByCategory } from '@/lib/constants/models'
 import { toast } from 'sonner'
 import {
@@ -47,7 +47,7 @@ export default function ConversationPage() {
   
   const tokens = useTokenStore(state => state.tokens)
   const loadTokens = useTokenStore(state => state.loadTokens)
-  const { chat } = useChatApi()
+  const { streamChat } = useStreamChatApi()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -117,7 +117,7 @@ export default function ConversationPage() {
     }))
   }
 
-  // 发送消息给所有选中的模型
+  // 发送消息给所有选中的模型（流式响应）
   const handleSendMessage = async () => {
     if (!input.trim() || conversationState.selectedModels.length === 0) {
       toast.error('请输入消息并选择至少一个模型')
@@ -141,7 +141,9 @@ export default function ConversationPage() {
       timestamp: new Date().toISOString()
     }
 
-    // 为每个选中的模型添加用户消息和设置加载状态
+    // 为每个选中的模型添加用户消息、AI占位消息和设置加载状态
+    const assistantMessageIds: Record<string, string> = {}
+
     setConversationState(prev => {
       const newConversations = { ...prev.conversations }
       const newIsLoading = { ...prev.isLoading }
@@ -150,7 +152,23 @@ export default function ConversationPage() {
         if (!newConversations[model.name]) {
           newConversations[model.name] = []
         }
+
+        // 添加用户消息
         newConversations[model.name] = [...newConversations[model.name], userMessage]
+
+        // 创建AI占位消息
+        const assistantMessageId = `assistant-${model.name}-${Date.now()}`
+        assistantMessageIds[model.name] = assistantMessageId
+
+        const assistantMessage: Message = {
+          id: assistantMessageId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date().toISOString(),
+          modelId: model.name
+        }
+
+        newConversations[model.name] = [...newConversations[model.name], assistantMessage]
         newIsLoading[model.name] = true
       })
 
@@ -163,68 +181,66 @@ export default function ConversationPage() {
 
     setInput('')
 
-    // 并发发送给所有模型
-    const promises = conversationState.selectedModels.map(async (model) => {
+    // 为每个模型启动独立的流式对话
+    conversationState.selectedModels.forEach(async (model) => {
       try {
+        console.log(`[多轮对话] 开始流式对话 - 模型: ${model.name}`)
+
         const messages = conversationState.conversations[model.name] || []
         const allMessages = [...messages, userMessage]
-        
-        const result = await chat(
+        const messageHistory = allMessages.map(msg => ({ role: msg.role, content: msg.content }))
+
+        const assistantMessageId = assistantMessageIds[model.name]
+
+        await streamChat(
           model.name,
-          allMessages.map(msg => ({ role: msg.role, content: msg.content })),
-          {}
-        )
-
-        console.log(`[多轮对话] 模型 ${model.name} 响应:`, result)
-
-        if (result.success && result.data) {
-          // 处理不同的响应格式
-          let content = ''
-
-          if (typeof result.data === 'string') {
-            content = result.data
-          } else if (result.data.content) {
-            content = result.data.content
-          } else if (result.data.choices && result.data.choices[0]?.message?.content) {
-            content = result.data.choices[0].message.content
-          } else if (result.data.message && result.data.message.content) {
-            content = result.data.message.content
-          } else {
-            console.error(`[多轮对话] 模型 ${model.name} 响应格式未知:`, result.data)
-            throw new Error(`响应格式未知: ${JSON.stringify(result.data)}`)
-          }
-
-          if (content) {
-            const assistantMessage: Message = {
-              id: `assistant-${model.name}-${Date.now()}`,
-              role: 'assistant',
-              content: content,
-              timestamp: new Date().toISOString(),
-              modelId: model.name
-            }
-
+          messageHistory,
+          {}, // parameters
+          // onChunk: 处理流式数据块
+          (chunk: string) => {
+            setConversationState(prev => {
+              const newConversations = { ...prev.conversations }
+              if (newConversations[model.name]) {
+                const messages = [...newConversations[model.name]]
+                const messageIndex = messages.findIndex(msg => msg.id === assistantMessageId)
+                if (messageIndex !== -1) {
+                  messages[messageIndex] = {
+                    ...messages[messageIndex],
+                    content: messages[messageIndex].content + chunk
+                  }
+                  newConversations[model.name] = messages
+                }
+              }
+              return {
+                ...prev,
+                conversations: newConversations
+              }
+            })
+          },
+          // onComplete: 流式输出完成
+          () => {
+            console.log(`[多轮对话] 模型 ${model.name} 流式输出完成`)
             setConversationState(prev => ({
               ...prev,
-              conversations: {
-                ...prev.conversations,
-                [model.name]: [...(prev.conversations[model.name] || []), assistantMessage]
-              },
               isLoading: {
                 ...prev.isLoading,
                 [model.name]: false
               }
             }))
-          } else {
-            throw new Error('响应内容为空')
           }
-        } else {
-          console.error(`[多轮对话] 模型 ${model.name} API调用失败:`, result)
-          throw new Error(result.error || 'API调用失败')
-        }
+        )
       } catch (error) {
-        console.error(`模型 ${model.name} 响应失败:`, error)
+        console.error(`[多轮对话] 模型 ${model.name} 响应失败:`, error)
         setConversationState(prev => ({
           ...prev,
+          conversations: {
+            ...prev.conversations,
+            [model.name]: prev.conversations[model.name]?.map(msg =>
+              msg.id === assistantMessageIds[model.name]
+                ? { ...msg, content: `抱歉，${model.displayName} 响应失败: ${error instanceof Error ? error.message : '未知错误'}` }
+                : msg
+            ) || []
+          },
           isLoading: {
             ...prev.isLoading,
             [model.name]: false
@@ -233,8 +249,6 @@ export default function ConversationPage() {
         toast.error(`模型 ${model.displayName} 响应失败`)
       }
     })
-
-    await Promise.allSettled(promises)
   }
 
   // 清空单个模型的对话
@@ -528,9 +542,13 @@ export default function ConversationPage() {
                                     {new Date(message.timestamp).toLocaleTimeString()}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-200 whitespace-pre-wrap break-words">
+                                <div className="text-sm text-gray-200 whitespace-pre-wrap break-words">
                                   {message.content}
-                                </p>
+                                  {/* 流式输入光标效果 */}
+                                  {message.role === 'assistant' && isLoading && message.content && (
+                                    <span className="inline-block w-2 h-4 bg-blue-400 ml-1 animate-pulse" />
+                                  )}
+                                </div>
                               </div>
                               <Button
                                 variant="ghost"
@@ -545,11 +563,11 @@ export default function ConversationPage() {
                         ))
                       )}
 
-                      {isLoading && (
+                      {isLoading && messages.filter(m => m.role === 'assistant').every(m => !m.content) && (
                         <div className="p-3 bg-gray-800/50 border border-gray-700/50 rounded-lg mr-4">
                           <div className="flex items-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-                            <span className="text-sm text-gray-300">AI 正在思考...</span>
+                            <span className="text-sm text-gray-300">{model.displayName} 正在思考...</span>
                           </div>
                         </div>
                       )}
