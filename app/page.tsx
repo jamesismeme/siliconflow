@@ -28,7 +28,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-3">
               <Link href="/console">
-                <Button variant="outline" size="sm" className="hidden sm:flex">
+                <Button size="sm" className="hidden sm:flex">
                   <Settings className="mr-2 h-4 w-4" />
                   <span className="button-text">后台管理</span>
                 </Button>
@@ -82,22 +82,11 @@ export default function HomePage() {
             </div>
 
             {/* CTA按钮 */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <Link href="/dashboard">
-                <Button size="lg">
-                  <span className="button-text">开始构建</span>
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+            <div className="flex justify-center mb-16">
               <Link href="/console">
-                <Button variant="outline" size="lg" className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400">
+                <Button size="lg">
                   <Key className="mr-2 h-5 w-5" />
                   <span className="button-text">配置 Token</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/models">
-                <Button variant="outline" size="lg">
-                  <span className="button-text">探索模型</span>
                 </Button>
               </Link>
             </div>
@@ -252,25 +241,7 @@ export default function HomePage() {
                 <br className="hidden md:block" />
                 免费使用，无需信用卡，即刻开始。
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/dashboard">
-                  <Button size="lg" className="bg-white text-black hover:bg-gray-100">
-                    <span className="button-text">免费开始使用</span>
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link href="/console">
-                  <Button variant="outline" size="lg" className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400">
-                    <Key className="mr-2 h-5 w-5" />
-                    <span className="button-text">添加 API Token</span>
-                  </Button>
-                </Link>
-                <Link href="/dashboard/models">
-                  <Button variant="outline" size="lg">
-                    <span className="button-text">查看文档</span>
-                  </Button>
-                </Link>
-              </div>
+
             </div>
           </div>
         </div>

@@ -139,7 +139,7 @@ export default function DashboardPage() {
                     </Badge>
                   )}
                   <Link href="/console/tokens">
-                    <Button variant="outline" className="border-green-500/30 text-green-300 hover:bg-green-500/10">
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white border-0">
                       查看详情
                     </Button>
                   </Link>

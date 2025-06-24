@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,71 +16,26 @@ import {
   Type
 } from 'lucide-react'
 import { toast } from 'sonner'
-
-interface SettingsData {
-  baseUrl: string
-  chatModel: string
-  imageModel: string
-  audioModel: string
-  textModel: string
-}
+import { useDefaultModels } from '@/lib/hooks/use-default-models'
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<SettingsData>({
-    baseUrl: 'https://api.siliconflow.cn/v1',
-    chatModel: 'Qwen/Qwen3-8B',
-    imageModel: 'Kwai-Kolors/Kolors',
-    audioModel: 'FunAudioLLM/SenseVoiceSmall',
-    textModel: 'BAAI/bge-m3'
-  })
-
+  const { settings, loading: hookLoading, updateSetting, saveAllSettings } = useDefaultModels()
   const [loading, setLoading] = useState(false)
-
-  // 加载设置
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
-  const loadSettings = async () => {
-    try {
-      const response = await fetch('/api/settings')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setSettings(prev => ({ ...prev, ...data.data }))
-        }
-      }
-    } catch (error) {
-      console.error('加载设置失败:', error)
-    }
-  }
 
   const saveSettings = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(settings)
-      })
-
-      const result = await response.json()
-      if (result.success) {
+      const success = saveAllSettings()
+      if (success) {
         toast.success('设置保存成功')
       } else {
-        toast.error(result.error || '保存失败')
+        toast.error('保存失败')
       }
     } catch (error) {
       toast.error('保存设置失败')
     } finally {
       setLoading(false)
     }
-  }
-
-  const updateSetting = (key: keyof SettingsData, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
   }
 
   return (

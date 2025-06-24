@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getDefaultModelByCategory } from '@/lib/constants/models'
+import { getDefaultModelByCategory, getModelByName } from '@/lib/constants/models'
 import { LocalStorageManager } from '@/lib/storage'
 import type { CallHistory as StorageCallHistory } from '@/lib/storage/types'
 
@@ -131,6 +131,46 @@ const defaultPreferences = {
   showRecommendedOnly: false,
   autoSaveHistory: true,
   maxHistoryItems: 50
+}
+
+// 获取用户设置的默认模型
+function getUserDefaultModel(category: 'chat' | 'image' | 'audio' | 'embedding' | 'rerank'): ModelConfig | undefined {
+  try {
+    const stored = localStorage.getItem('siliconflow_default_models')
+    if (stored) {
+      const settings = JSON.parse(stored)
+      let modelName: string
+
+      switch (category) {
+        case 'chat':
+          modelName = settings.chatModel
+          break
+        case 'image':
+          modelName = settings.imageModel
+          break
+        case 'audio':
+          modelName = settings.audioModel
+          break
+        case 'embedding':
+        case 'rerank':
+          modelName = settings.textModel
+          break
+        default:
+          return getDefaultModelByCategory(category)
+      }
+
+      // 尝试根据名称找到模型
+      const userModel = getModelByName(modelName)
+      if (userModel && userModel.category === category) {
+        return userModel
+      }
+    }
+  } catch (error) {
+    console.error('读取用户默认模型设置失败:', error)
+  }
+
+  // 如果没有找到用户设置的模型，回退到系统默认模型
+  return getDefaultModelByCategory(category)
 }
 
 // 创建Store
@@ -294,7 +334,7 @@ export const useModelStore = create<ModelStore>()(
 
       // 自动选择默认模型
       selectDefaultModel: (category) => {
-        const defaultModel = getDefaultModelByCategory(category)
+        const defaultModel = getUserDefaultModel(category)
         if (defaultModel) {
           const actions = get()
           actions.setSelectedModel(defaultModel)
@@ -303,7 +343,7 @@ export const useModelStore = create<ModelStore>()(
 
       // 强制选择指定类别的默认模型（即使已有模型）
       forceSelectDefaultModel: (category) => {
-        const defaultModel = getDefaultModelByCategory(category)
+        const defaultModel = getUserDefaultModel(category)
         if (defaultModel) {
           const actions = get()
           actions.setSelectedModel(defaultModel)
