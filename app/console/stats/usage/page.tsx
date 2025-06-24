@@ -109,7 +109,7 @@ export default function UsageStatsPage() {
               </span>
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl">
-              详细的使用数据分析和趋势 ({usageStats.timeRange.days}天数据)
+              详细的使用数据分析和趋势 ({period === 'today' ? '今天' : period === 'week' ? '本周' : '本月'}数据)
             </p>
           </div>
         <div className="flex items-center space-x-2">

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Bot, Zap, Shield, BarChart3, ArrowRight, Sparkles, Brain, Code, MessageSquare, Image, Mic, FileText, Key } from 'lucide-react'
+import { Bot, Zap, Shield, BarChart3, ArrowRight, Sparkles, Brain, Code, MessageSquare, Image, Mic, FileText, Key, Settings, History } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -29,8 +29,8 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <Link href="/console">
                 <Button variant="outline" size="sm" className="hidden sm:flex">
-                  <Key className="mr-2 h-4 w-4" />
-                  <span className="button-text">Token 管理</span>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span className="button-text">后台管理</span>
                 </Button>
               </Link>
               <Link href="/dashboard">
@@ -301,10 +301,11 @@ export default function HomePage() {
             <div>
               <h3 className="text-white font-semibold mb-4">平台</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/dashboard" className="hover:text-white transition-colors">模型控制台</Link></li>
-                <li><Link href="/console/tokens" className="hover:text-white transition-colors">Token 管理</Link></li>
-                <li><Link href="/console/settings" className="hover:text-white transition-colors">系统设置</Link></li>
+                <li><Link href="/dashboard" className="hover:text-white transition-colors">控制台</Link></li>
+                <li><Link href="/console/tokens" className="hover:text-white transition-colors">Token管理</Link></li>
                 <li><Link href="/console/stats" className="hover:text-white transition-colors">使用统计</Link></li>
+                <li><Link href="/console/stats/usage" className="hover:text-white transition-colors">调用历史</Link></li>
+                <li><Link href="/console/settings" className="hover:text-white transition-colors">系统设置</Link></li>
               </ul>
             </div>
           </div>
