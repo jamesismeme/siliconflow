@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Bot, Zap, Shield, BarChart3, ArrowRight, Sparkles, Brain, Code, MessageSquare, Image, Mic, FileText, Key, Settings, History } from 'lucide-react'
+import { Bot, Zap, Shield, BarChart3, ArrowRight, Sparkles, Brain, Code, MessageSquare, Image, Mic, FileText, Key, Settings } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -75,11 +75,96 @@ export default function HomePage() {
             </p>
 
             {/* 提示信息 */}
-            <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-2 mb-12">
+            <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-2 mb-8">
               <Key className="h-4 w-4 text-orange-400" />
               <span className="text-sm text-orange-300">
                 开始前请先配置您的 SiliconFlow API Token
               </span>
+            </div>
+
+            {/* 免费额度领取宣传 */}
+            <div className="max-w-4xl mx-auto mb-12">
+              <div className="bg-gradient-to-r from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-2xl p-8">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/30 rounded-full px-4 py-2 mb-4">
+                    <span className="text-2xl">🎁</span>
+                    <span className="text-lg font-bold text-green-300">
+                      立即领取 2000 万 Tokens 免费额度！
+                    </span>
+                  </div>
+                  <p className="text-gray-300 text-lg leading-relaxed">
+                    注册时填写邀请码 <span className="font-mono bg-blue-600/20 px-2 py-1 rounded text-blue-300 font-bold">FKGMaq3D</span> 或点击
+                  </p>
+                  <div className="mt-4">
+                    <a
+                      href="https://cloud.siliconflow.cn/i/FKGMaq3D"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105"
+                    >
+                      <span className="text-xl">👉</span>
+                      <span>https://cloud.siliconflow.cn/i/FKGMaq3D</span>
+                    </a>
+                  </div>
+                  <p className="text-green-300 font-semibold mt-4 text-lg">
+                    即可获得 14 元等值平台配额，无需充值直接体验强大大模型！
+                  </p>
+                </div>
+
+                {/* 二维码区域 */}
+                <div className="flex flex-col md:flex-row items-center justify-center gap-8">
+                  <div className="text-center">
+                    <div className="bg-white p-4 rounded-xl shadow-lg inline-block">
+                      <img
+                        src="/images/FKGMaq3D.png"
+                        alt="SiliconFlow 邀请码二维码"
+                        className="w-[300px] h-[300px] object-contain"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-400 mt-3">
+                      扫码注册即可获得免费额度
+                    </p>
+                  </div>
+
+                  <div className="text-center md:text-left space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                      <span className="text-gray-300">扫码或点击链接注册</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                      <span className="text-gray-300">填写邀请码 <span className="font-mono text-blue-300">FKGMaq3D</span></span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                      <span className="text-gray-300">立即获得 14 元免费额度</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">4</div>
+                      <span className="text-gray-300">复制 API Token 到本平台</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 特色说明 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-gray-700/50">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">⚡</div>
+                    <h4 className="font-semibold text-white mb-1">即时生效</h4>
+                    <p className="text-sm text-gray-400">注册完成立即获得额度</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🚀</div>
+                    <h4 className="font-semibold text-white mb-1">无需充值</h4>
+                    <p className="text-sm text-gray-400">免费体验所有大模型</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🎯</div>
+                    <h4 className="font-semibold text-white mb-1">高性价比</h4>
+                    <p className="text-sm text-gray-400">14 元可调用数万次</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* CTA按钮 */}

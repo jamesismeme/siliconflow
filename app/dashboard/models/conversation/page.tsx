@@ -199,9 +199,13 @@ export default function ConversationPage() {
       timestamp: new Date().toISOString()
     }
 
-    // 为每个选中的模型添加用户消息、AI占位消息和设置加载状态
+    // 为每个选中的模型生成唯一的消息ID
     const assistantMessageIds: Record<string, string> = {}
+    conversationState.selectedModels.forEach(model => {
+      assistantMessageIds[model.name] = `assistant-${model.name}-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+    })
 
+    // 为每个选中的模型添加用户消息、AI占位消息和设置加载状态
     setConversationState(prev => {
       const newConversations = { ...prev.conversations }
       const newIsLoading = { ...prev.isLoading }
@@ -215,8 +219,7 @@ export default function ConversationPage() {
         newConversations[model.name] = [...newConversations[model.name], userMessage]
 
         // 创建AI占位消息
-        const assistantMessageId = `assistant-${model.name}-${Date.now()}`
-        assistantMessageIds[model.name] = assistantMessageId
+        const assistantMessageId = assistantMessageIds[model.name]
 
         const assistantMessage: Message = {
           id: assistantMessageId,
@@ -250,6 +253,7 @@ export default function ConversationPage() {
         const messageHistory = [...userMessages, userMessage].map(msg => ({ role: msg.role, content: msg.content }))
 
         const assistantMessageId = assistantMessageIds[model.name]
+        console.log(`[多轮对话] 模型 ${model.name} 使用消息ID:`, assistantMessageId)
 
         await streamChat(
           model.name,
@@ -263,6 +267,7 @@ export default function ConversationPage() {
               if (newConversations[model.name]) {
                 const messages = [...newConversations[model.name]]
                 const messageIndex = messages.findIndex(msg => msg.id === assistantMessageId)
+                console.log(`[多轮对话] 模型 ${model.name} 查找消息索引:`, messageIndex, '总消息数:', messages.length)
                 if (messageIndex !== -1) {
                   const updatedMessage = {
                     ...messages[messageIndex],
@@ -273,6 +278,7 @@ export default function ConversationPage() {
                   console.log(`[多轮对话] 模型 ${model.name} 更新后内容长度:`, updatedMessage.content.length)
                 } else {
                   console.error(`[多轮对话] 模型 ${model.name} 找不到消息ID:`, assistantMessageId)
+                  console.error(`[多轮对话] 模型 ${model.name} 当前消息列表:`, messages.map(m => ({ id: m.id, role: m.role, contentLength: m.content.length })))
                 }
               } else {
                 console.error(`[多轮对话] 模型 ${model.name} 对话记录不存在`)
